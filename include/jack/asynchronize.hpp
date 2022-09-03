@@ -8,10 +8,97 @@
 namespace jack
 {
 
-// /**
-//  * @brief Wake a single thread per set() call
-//  */
-// class UnicastEvent;
+/**
+ * @brief Wake a single thread per set() call
+ */
+class UnicastEvent
+{
+  public:
+
+    /**
+     * @brief Block the calling thread until another thread calls set().
+     */
+    inline void wait()
+    {
+        std::unique_lock<std::mutex> lock {m_mtx};
+        if (!m_set) {
+            m_cv.wait(lock, [&]{
+                return m_set;
+            });
+        }
+        m_set = false;
+    }
+
+    /**
+     * @brief Block the calling thread until another thread 
+     * calls set() OR until the duration is expired.
+     * 
+     * @param duration maximum duration thread should wait
+     * @return true if set() was called; false if duration expired
+     */
+    template <typename rep, typename period>
+    inline bool wait_for(std::chrono::duration<rep, period> duration)
+    {
+        std::unique_lock<std::mutex> lock {m_mtx};
+        bool was_set {true};
+        if (!m_set) {
+            was_set = m_cv.wait_for(lock, duration, [&]{
+                return m_set;
+            });
+        }
+        m_set = false;
+        return was_set;
+    }
+
+    /**
+     * @brief Block the calling thread until another thread
+     * calls set() OR until the timeout is reached.
+     * 
+     * @param timeout maximum time point at which thread should stop waiting
+     * @return true if set() was called; false if timeout was reached
+     */
+    template <typename clock, typename duration>
+    inline bool wait_until(std::chrono::time_point<clock, duration> timeout)
+    {
+        std::unique_lock<std::mutex> lock {m_mtx};
+        bool was_set {true};
+        if (!m_set) {
+            was_set = m_cv.wait_until(lock, timeout, [&]{
+                return m_set;
+            });
+        }
+        m_set = false;
+        return was_set;
+    }
+
+    /**
+     * @brief Set the internal flag & wake 
+     * a waiting thread.
+     */
+    inline void set()
+    {
+        m_mtx.lock();
+        m_set = true;
+        m_mtx.unlock();
+        m_cv.notify_one();
+    }
+
+    /**
+     * @brief Check if the internal flag has been set.
+     */
+    inline bool is_set()
+    {
+        std::lock_guard<std::mutex> lock {m_mtx};
+        return m_set;
+    }
+
+
+
+  private:
+    bool m_set {false};
+    std::mutex m_mtx;
+    std::condition_variable m_cv;
+};
 
 // /**
 //  * @brief Wake all threads until reset() is called
@@ -50,8 +137,8 @@ enum Signal
 
 constexpr inline Signal operator|(Signal some, Signal other)
 {
-    return static_cast<Signal>(
-        static_cast<int>(some) | static_cast<int>(other));
+    return static_cast<Signal>(static_cast<int>(some) |
+                               static_cast<int>(other));
 }
 
 /**

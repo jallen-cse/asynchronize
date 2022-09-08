@@ -6,9 +6,10 @@
 
 int main()
 {
+    std::cout << "sizeof(jack::broadcast_event) == " 
+              << sizeof(jack::broadcast_event) << '\n';
+ 
     jack::broadcast_event event;
-
-    std::cout << sizeof(jack::broadcast_event) << '\n';
 
     std::thread t0 {[&] {
         log("0 waiting");

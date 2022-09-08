@@ -380,7 +380,7 @@ class unicast_event
  * This is to prevent already-woken waiters from returning to the
  * waiting pool and spuriously waking again.
  */
-class broadcast_event
+class multicast_event
 {
   public:
     
@@ -525,7 +525,7 @@ class broadcast_event
 /**
  * @brief Functionally similar to jack::unicast_event except for ... TODO
  */
-class multicast_event
+class broadcast_event
 {   
   public:
 
@@ -600,8 +600,8 @@ class multicast_event
      * threads currently in the waiting pool.  It is possible that
      * new waiters will enter the pool between this call and the Nth
      * thread waking which can lead to a different group waking than that
-     * which consituted the pool at the time of this call. *If this
-     * behavior is undesireable, use jack::broadcast_event*
+     * which consituted the pool at the time of this call. If this
+     * behavior is undesireable, use jack::multicast_event.
      */
     void set()
     {

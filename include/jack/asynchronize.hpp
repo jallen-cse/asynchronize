@@ -54,7 +54,7 @@ class sticky_event
 
     /**
      * @brief Block the calling thread until another thread 
-     * has called set() OR until the duration expires.  If 
+     * has called set() or until the duration expires.  If 
      * multiple threads are waiting, it is unspecified 
      * which will be woken.
      * 
@@ -177,7 +177,7 @@ class toggle_event
 
     /**
      * @brief Block the calling thread until another thread 
-     * has called set() OR until the duration expires.
+     * has called set() or until the duration expires.
      * 
      * @param duration maximum duration thread should wait
      * @return true if set() was called; false if duration expired
@@ -299,7 +299,7 @@ class unicast_event
 
     /**
      * @brief Block the calling thread until another thread 
-     * calls set() OR until the duration expires.
+     * calls set() or until the duration expires.
      * 
      * @param duration maximum duration thread should wait
      * @return true if set() was called; false if duration expired
@@ -404,7 +404,7 @@ class broadcast_event
 
     /**
      * @brief Block the calling thread until another thread 
-     * calls set() OR until the duration expires.
+     * calls set() or until the duration expires.
      * 
      * @param duration maximum duration thread should wait
      * @return true if set() was called; false if duration expired
@@ -548,7 +548,7 @@ class multicast_event
 
     /**
      * @brief Block the calling thread until another thread 
-     * calls set() OR until the duration expires.
+     * calls set() or until the duration expires.
      * 
      * @param duration maximum duration thread should wait
      * @return true if set() was called; false if duration expired

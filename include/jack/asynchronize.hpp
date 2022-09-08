@@ -10,14 +10,156 @@
 namespace jack
 {
 
-// class sticky_event
-// {
-// };
+class event
+{
+    using mtx_lg = std::lock_guard<std::mutex>;
+    using mtx_ul = std::unique_lock<std::mutex>;
+  public:
+    virtual void wait() = 0;
+    virtual void wait_for() = 0;
+    virtual void wait_until() = 0;
+    virtual void set() = 0;
+};
 
 /**
- * @brief Python-like event object.  Set() will set the
- * internal flag so all wait calls return
- * immediately until reset() is called.
+ * @brief A thread synchronization object that garauntees one
+ * thread is woken per set() call.  This means that if no
+ * threads are waiting when set() is called, the next wait will
+ * return immediately.
+ * 
+ * @note Calling set() multiple times between waiters will have 
+ * no additional effect.
+ */
+class sticky_event
+{
+    using mtx_lg = std::lock_guard<std::mutex>;
+    using mtx_ul = std::unique_lock<std::mutex>;
+  public:
+    
+    /**
+     * @brief Block the calling thread until another thread
+     * has called set.  If multiple threads are waiting, 
+     * it is unspecified which will be woken.
+     */
+    void wait()
+    {
+        mtx_ul lock {m_mtx};
+        if (!m_is_set)
+        {
+            m_cv.wait(lock, [this] {
+                return m_is_set;
+            });
+        }
+        m_is_set = false;
+    }
+
+    /**
+     * @brief Block the calling thread until another thread 
+     * has called set() OR until the duration expires.  If 
+     * multiple threads are waiting, it is unspecified 
+     * which will be woken.
+     * 
+     * @param duration maximum duration thread should wait
+     * @return true if set() was called; false if duration expired
+     */
+    template <typename rep, typename period>
+    inline bool wait_for(std::chrono::duration<rep, period> duration)
+    {
+        mtx_ul lock {m_mtx};
+        bool was_set {true};
+        if (!m_is_set)
+        {
+            // TODO does a sporadic wake count as a 
+            // notify if the predicate evals true?
+            was_set = m_cv.wait_for(lock, duration, [this] {
+                return m_is_set;
+            });
+        }
+        m_is_set = false;
+        return was_set;
+    }
+
+    /**
+     * @brief Block the calling thread until another thread
+     * has called set() or until the timeout is reached.  If 
+     * multiple threads are waiting, it is unspecified 
+     * which will be woken.
+     * 
+     * @param timeout maximum time point at which thread should stop waiting
+     * @return true if set() was called; false if timeout was reached
+     */
+    template <typename clock, typename duration>
+    inline bool wait_until(std::chrono::time_point<clock, duration> timeout)
+    {
+        mtx_ul lock {m_mtx};
+        bool was_set {true};
+        if (!m_is_set)
+        {
+            // TODO does a sporadic wake count as a 
+            // notify if the predicate evals true?
+            was_set = m_cv.wait_until(lock, timeout, [this] {
+                return m_is_set;
+            });
+        }
+        m_is_set = false;
+        return was_set;
+    }
+
+    
+
+    /**
+     * @brief Set the internal flag and wake at most one waiting
+     * thread.  If there are no waiters, the next call to wait
+     * will return immediately.  If there are multiple waiters,
+     * it is unspecified which will be woken.
+     */
+    void set()
+    {
+        m_mtx.lock();
+        if (!m_is_set)
+        {
+            m_is_set = true;
+            m_mtx.unlock();
+            m_cv.notify_one();
+        }
+        else
+        {
+            m_mtx.unlock();
+        }
+    }
+
+    /**
+     * @brief Check if the internal flag is set.
+     * 
+     * @return true if the flag is set, else false
+     */
+    bool is_set()
+    {
+        mtx_lg lock {m_mtx};
+        return m_is_set;
+    }
+
+    /**
+     * @brief Reset the internal flag so future wait
+     * calls will block. 
+     */
+    void reset()
+    {
+        mtx_lg lock {m_mtx};
+        m_is_set = false;
+    }
+
+  private:
+    bool m_is_set {false};
+    std::mutex m_mtx;
+    std::condition_variable m_cv;
+};
+
+/**
+ * @brief A Python Event-like synchronization object.  Set()
+ * will set the internal flag and wake all waiting threads. 
+ * All future wait calls will return immediately until
+ * reset() is called.
  */
 class toggle_event
 {
@@ -28,7 +170,6 @@ class toggle_event
     /**
      * @brief Block the calling thread until another
      * thread has called set(). 
-     * 
      */
     void wait()
     {
@@ -42,25 +183,82 @@ class toggle_event
     }
 
     /**
+     * @brief Block the calling thread until another thread 
+     * has called set() OR until the duration expires.
+     * 
+     * @param duration maximum duration thread should wait
+     * @return true if set() was called; false if duration expired
+     */
+    template <typename rep, typename period>
+    inline bool wait_for(std::chrono::duration<rep, period> duration)
+    {
+        mtx_ul lock {m_mtx};
+        bool was_set {true};
+        if (!m_is_set)
+        {
+            was_set = m_cv.wait_for(lock, duration, [this] {
+                return m_is_set;
+            });
+        }
+        return was_set;
+    }
+
+    /**
+     * @brief Block the calling thread until another thread
+     * has called set() or until the timeout is reached.
+     * 
+     * @param timeout maximum time point at which thread should stop waiting
+     * @return true if set() was called; false if timeout was reached
+     */
+    template <typename clock, typename duration>
+    inline bool wait_until(std::chrono::time_point<clock, duration> timeout)
+    {
+        mtx_ul lock {m_mtx};
+        bool was_set {true};
+        if (!m_is_set)
+        {
+            was_set = m_cv.wait_until(lock, timeout, [this] {
+                return m_is_set;
+            });
+        }
+        return was_set;
+    }
+
+    /**
      * @brief Set the internal flag and wake all
      * waiting threads.  All future calls to wait will
      * return immediately until reset() is called.
      */
     void set()
     {
+        m_mtx.lock();
+        if (!m_is_set)
         {
-            mtx_lg lock {m_mtx};
             m_is_set = true;
+            m_mtx.unlock();
+            m_cv.notify_all();
         }
-        m_cv.notify_all();
+        else
+        {
+            m_mtx.unlock();
+        }
     }
 
+    /**
+     * @brief Check if the internal flag is set.
+     * 
+     * @return true if the flag is set, else false
+     */
     bool is_set()
     {
         mtx_lg lock {m_mtx};
         return m_is_set;
     }
 
+    /**
+     * @brief Reset the internal flag so future wait
+     * calls will block. 
+     */
     void reset()
     {
         mtx_lg lock {m_mtx};
@@ -75,34 +273,40 @@ class toggle_event
 
 /**
  * @brief A simple wrapper around a boolean, mutex, and condition variable
- * for concise thread synchronization. Each call to set() will allow only one
- * waiting thread to pass.
+ * for concise thread synchronization. Each call to set() will wake at most
+ * one thread.  If no threads are waiting when set() is called, nothing will 
+ * happen and the next to wait will still block.
  * 
- * @note If set() was already called when no threads 
- * were waiting, this will return immediately.
+ * @note In the case of multiple waiters, it is possible for set()
+ * to wake a thread that began waiting after the call to set().  
+ * This is because set() releases the mutex before calling 
+ * condition_variable::notify_one, so it is possible (but unlikely)
+ * that a waiter will acquire the mutex and check m_set_count within 
+ * this period.
  */
 class unicast_event
 {
+    using mtx_lg = std::lock_guard<std::mutex>;
+    using mtx_ul = std::unique_lock<std::mutex>;
   public:
-
+    
     /**
-     * @brief Block the calling thread until another thread has called set().
+     * @brief Block the calling thread until another thread calls set().
      */
-    inline void wait()
+    void wait()
     {
-        std::unique_lock<std::mutex> lock {m_mtx};
-        if (!m_set)
-        {
-            m_cv.wait(lock, [&] {
-                return m_set;
-            });
-        }
-        m_set = false;
+        mtx_ul lock {m_mtx};
+        ++m_wait_count;
+        m_cv.wait(lock, [this] {
+            return m_set_count > 0;
+        });
+        --m_wait_count;
+        --m_set_count;
     }
 
     /**
      * @brief Block the calling thread until another thread 
-     * has called set() OR until the duration expires.
+     * calls set() OR until the duration expires.
      * 
      * @param duration maximum duration thread should wait
      * @return true if set() was called; false if duration expired
@@ -110,21 +314,19 @@ class unicast_event
     template <typename rep, typename period>
     inline bool wait_for(std::chrono::duration<rep, period> duration)
     {
-        std::unique_lock<std::mutex> lock {m_mtx};
-        bool was_set {true};
-        if (!m_set)
-        {
-            was_set = m_cv.wait_for(lock, duration, [&] {
-                return m_set;
-            });
-        }
-        m_set = false;
+        mtx_ul lock {m_mtx};
+        ++m_wait_count;
+        const bool was_set = m_cv.wait_for(lock, duration, [this] {
+            return m_set_count > 0;
+        });
+        --m_wait_count;
+        m_set_count -= (uint16_t)was_set;
         return was_set;
     }
 
     /**
      * @brief Block the calling thread until another thread
-     * has called set() or until the timeout is reached.
+     * calls set() or until the timeout is reached.
      * 
      * @param timeout maximum time point at which thread should stop waiting
      * @return true if set() was called; false if timeout was reached
@@ -132,57 +334,48 @@ class unicast_event
     template <typename clock, typename duration>
     inline bool wait_until(std::chrono::time_point<clock, duration> timeout)
     {
-        std::unique_lock<std::mutex> lock {m_mtx};
-        bool was_set {true};
-        if (!m_set)
-        {
-            was_set = m_cv.wait_until(lock, timeout, [&]{
-                return m_set;
-            });
-        }
-        m_set = false;
+        mtx_ul lock {m_mtx};
+        ++m_wait_count;
+        const bool was_set = m_cv.wait_until(lock, timeout, [this] {
+            return m_set_count > 0;
+        });
+        --m_wait_count;
+        m_set_count -= (uint16_t)was_set;
         return was_set;
     }
 
     /**
-     * @brief Set the internal flag & wake 
-     * a single waiting thread, if any.  
+     * @brief Wake a single waiting thread, if any.
      */
-    inline void set()
+    void set()
     {
         m_mtx.lock();
-        m_set = true;
-        m_mtx.unlock();
-        m_cv.notify_one();
-    }
-
-    /**
-     * @brief Reset the internal flag.
-     */
-    inline void reset()
-    {
-        m_mtx.lock();
-        m_set = false;
-        m_mtx.unlock();
-    }
-
-    /**
-     * @brief Check if the internal flag is currently set.
-     */
-    inline bool is_set()
-    {
-        std::lock_guard<std::mutex> lock {m_mtx};
-        return m_set;
+        if (m_wait_count > m_set_count)
+        {
+            ++m_set_count;
+            m_mtx.unlock();
+            m_cv.notify_one();
+        }
+        else
+        {
+            m_mtx.unlock();
+        }
     }
 
   private:
-    /// @brief 
-    bool m_set {false};
 
-    /// @brief 
+    /// @brief Number of threads currently waiting.
+    uint16_t m_wait_count {0};
+    
+    /// @brief Number of pending wakes. set() can be called mutiple times
+    /// before a waiter is notified, so this ensures none of those calls
+    /// are redundant.
+    uint16_t m_set_count {0};
+
+    /// @brief Guards access to m_set_count and m_wait_count.
     std::mutex m_mtx;
     
-    /// @brief 
+    /// @brief Notifies waiting threads on set() calls.
     std::condition_variable m_cv;
 };
 
@@ -336,28 +529,26 @@ class broadcast_event
 //  * @tparam condition must evaluate to true for set() to wake a thread
 //  */
 // template <typename condition>
-class event
-{   
-    using mtx_ul = std::unique_lock<std::mutex>;
-    using mtx_lg = std::lock_guard<std::mutex>;
+// class event
+// {   
+//     using mtx_ul = std::unique_lock<std::mutex>;
+//     using mtx_lg = std::lock_guard<std::mutex>;
 
-    template <typename predicate>
-    inline void wait(predicate& pred)
-    {
-        mtx_ul lock {m_mtx};
-        m_cv.wait(lock, pred);
-    }
+//     template <typename predicate>
+//     inline void wait(predicate& pred)
+//     {
+//         mtx_ul lock {m_mtx};
+//         m_cv.wait(lock, pred);
+//     }
 
-    template
+//     inline void set()
+//     {
+//         m_cv.notify_all();
+//     }
 
-    inline void set()
-    {
-        m_cv.notify_all();
-    }
-
-    std::mutex m_mtx;
-    std::condition_variable m_cv;
-}
+//     std::mutex m_mtx;
+//     std::condition_variable m_cv;
+// }
 
 enum Signal
 {

@@ -69,8 +69,6 @@ class sticky_event
         bool was_set {true};
         if (!m_is_set)
         {
-            // TODO does a sporadic wake count as a 
-            // notify if the predicate evals true?
             was_set = m_cv.wait_for(lock, duration, [this] {
                 return m_is_set;
             });
@@ -95,8 +93,6 @@ class sticky_event
         bool was_set {true};
         if (!m_is_set)
         {
-            // TODO does a sporadic wake count as a 
-            // notify if the predicate evals true?
             was_set = m_cv.wait_until(lock, timeout, [this] {
                 return m_is_set;
             });
@@ -550,26 +546,26 @@ class broadcast_event
 //     std::condition_variable m_cv;
 // }
 
-enum Signal
+enum class Signal
 {
-    NONE = 0,
-    SIG0 = 1,
-    SIG1 = 2,
-    SIG2 = 4,
-    SIG3 = 8,
-    SIG4 = 16,
-    SIG5 = 32,
-    SIG6 = 64,
-    SIG7 = 128,
-    SIG8 = 256,
-    SIG9 = 512,
-    SIG10 = 1024,
-    SIG11 = 2048,
-    SIG12 = 4096,
-    SIG13 = 8192,
-    SIG14 = 16384,
-    SIG15 = 32768,
-    ANY = 65535
+    NONE  = 0b0000000000000000,
+    SIG0  = 0b0000000000000001,
+    SIG1  = 0b0000000000000010,
+    SIG2  = 0b0000000000000100,
+    SIG3  = 0b0000000000001000,
+    SIG4  = 0b0000000000010000,
+    SIG5  = 0b0000000000100000,
+    SIG6  = 0b0000000001000000,
+    SIG7  = 0b0000000010000000,
+    SIG8  = 0b0000000100000000,
+    SIG9  = 0b0000001000000000,
+    SIG10 = 0b0000010000000000,
+    SIG11 = 0b0000100000000000,
+    SIG12 = 0b0001000000000000,
+    SIG13 = 0b0010000000000000,
+    SIG14 = 0b0100000000000000,
+    SIG15 = 0b1000000000000000,
+    ANY   = 0b1111111111111111,
 };
 
 constexpr inline Signal operator|(Signal some, Signal other)

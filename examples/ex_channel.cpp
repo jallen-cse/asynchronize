@@ -11,29 +11,29 @@ using namespace std::chrono_literals;
 using namespace jack;
 
 std::map<Signal, const char*> repr {
-    {NONE, "NONE"},
-    {SIG0, "SIG0"},
-    {SIG1, "SIG1"},
-    {SIG2, "SIG2"},
-    {SIG3, "SIG3"},
-    {SIG4, "SIG4"},
-    {SIG5, "SIG5"},
-    {SIG6, "SIG6"},
-    {SIG7, "SIG7"},
-    {SIG8, "SIG8"},
-    {SIG9, "SIG9"},
-    {SIG10, "SIG10"},
-    {SIG11, "SIG11"},
-    {SIG12, "SIG12"},
-    {SIG13, "SIG13"},
-    {SIG14, "SIG14"},
-    {SIG15, "SIG15"},
-    {ANY, "ANY"},
+    {Signal::NONE, "NONE"},
+    {Signal::SIG0, "SIG0"},
+    {Signal::SIG1, "SIG1"},
+    {Signal::SIG2, "SIG2"},
+    {Signal::SIG3, "SIG3"},
+    {Signal::SIG4, "SIG4"},
+    {Signal::SIG5, "SIG5"},
+    {Signal::SIG6, "SIG6"},
+    {Signal::SIG7, "SIG7"},
+    {Signal::SIG8, "SIG8"},
+    {Signal::SIG9, "SIG9"},
+    {Signal::SIG10, "SIG10"},
+    {Signal::SIG11, "SIG11"},
+    {Signal::SIG12, "SIG12"},
+    {Signal::SIG13, "SIG13"},
+    {Signal::SIG14, "SIG14"},
+    {Signal::SIG15, "SIG15"},
+    {Signal::ANY, "ANY"},
 };
 
 int main()
 {
-
+    
     // new channel with ground state NONE (0)
     Channel<Signal> channel(Signal::NONE);
 

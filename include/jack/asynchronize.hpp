@@ -6,7 +6,6 @@
 #include <condition_variable>
 #include <thread>
 
-
 namespace jack
 {
 
@@ -100,8 +99,6 @@ class sticky_event
         m_is_set = false;
         return was_set;
     }
-
-    
 
     /**
      * @brief Set the internal flag and wake at most one waiting
@@ -376,8 +373,12 @@ class unicast_event
 };
 
 /**
- * @brief Functionally similar to jack::unicast_event, 
- * but set() wakes all currently waiting threads.
+ * @brief Functionally similar to jack::unicast_event except for
+ * two differences. Firstly, set() calls wake all currently waiting threads. 
+ * Secondly, between a call to set() and the last waking thread releasing
+ * the mutex, new waiters are temporarily blocked from the waiting pool.
+ * This is to prevent already-woken waiters from returning to the
+ * waiting pool and spuriously waking again.
  */
 class broadcast_event
 {
@@ -468,7 +469,8 @@ class broadcast_event
     }
 
     /**
-     * @brief Wake all currently waiting threads.
+     * @brief Wake all currently waiting threads.  Can block
+     * until previous waiting pool is finished waking.
      */
     inline void set()
     {
@@ -517,6 +519,122 @@ class broadcast_event
     
     /// @brief Notifies waiting threads on set() calls.
     std::condition_variable m_cv;
+};
+
+
+/**
+ * @brief Functionally similar to jack::unicast_event except for ... TODO
+ */
+class multicast_event
+{
+  public:
+
+    /**
+     * @brief Block the calling thread until another thread calls set().
+     */
+    void wait()
+    {
+        std::unique_lock<std::mutex> wait_lock {m_mtx};
+        if (m_set_count == 0)
+        {
+            ++m_wait_count;
+            m_cv.wait(wait_lock, [this] {
+                return m_set_count > 0;
+            });
+            --m_wait_count;
+        }
+        --m_set_count;
+    }
+
+    /**
+     * @brief Block the calling thread until another thread 
+     * calls set() OR until the duration expires.
+     * 
+     * @param duration maximum duration thread should wait
+     * @return true if set() was called; false if duration expired
+     */
+    template <typename rep, typename period>
+    inline bool wait_for(std::chrono::duration<rep, period> duration)
+    {
+        std::unique_lock<std::mutex> wait_lock {m_mtx};
+        bool was_set {true};
+        if (m_set_count == 0)
+        {
+            ++m_wait_count;
+            bool was_set = m_cv.wait_for(wait_lock, duration, [this] {
+                return m_set_count > 0;
+            });
+            --m_wait_count;
+
+        }
+        m_set_count -= (uint16_t)was_set;
+        return was_set;
+    }
+
+    /**
+     * @brief Block the calling thread until another thread
+     * calls set() or until the timeout is reached.
+     * 
+     * @param timeout maximum time point at which thread should stop waiting
+     * @return true if set() was called; false if timeout was reached
+     */
+    template <typename clock, typename duration>
+    inline bool wait_until(std::chrono::time_point<clock, duration> timeout)
+    {
+        std::unique_lock<std::mutex> wait_lock {m_mtx};
+        bool was_set {true};
+        if (m_set_count == 0)
+        {
+            ++m_wait_count;
+            was_set = m_cv.wait_until(wait_lock, timeout, [this] {
+                return m_set_count > 0;
+            });
+            --m_wait_count;
+        }
+        m_set_count -= (uint16_t)was_set;
+        return was_set;
+    }
+
+    /**
+     * @brief Wake N waiting threads, where N is the number of
+     * threads currently in the waiting pool.  It is possible that
+     * new waiters will enter the pool between this call and the Nth
+     * thread waking which can lead to a different group waking than that
+     * which consituted the pool at the time of this call. *If this
+     * behavior is undesireable, use jack::broadcast_event*
+     */
+    void set()
+    {
+        m_mtx.lock();
+        if (m_wait_count > 0)
+        {
+            // we need to wake m_wait_count waiters
+            // increment because set() could be called before
+            // all the previous wakes occur
+            m_set_count += m_wait_count;
+            m_mtx.unlock();
+            m_cv.notify_all();
+        }
+        else
+        {
+            m_mtx.unlock();
+        }
+    }
+
+  private:
+    
+    /// @brief Number of threads currently waiting.
+    uint16_t m_wait_count {0};
+    
+    /// @brief Number of pending wakes.
+    uint16_t m_set_count {0};
+
+    /// @brief Guards access to m_set_count and m_wait_count.
+    std::mutex m_mtx;
+    
+    /// @brief Notifies waiting threads on set() calls.
+    std::condition_variable m_cv;
+    
 };
 
 // /**
@@ -656,7 +774,7 @@ class Channel
     std::condition_variable m_cv;
 };
 
-template <typename SigTp>
-class MuxChannel;
+// template <typename SigTp>
+// class MuxChannel;
 
 }

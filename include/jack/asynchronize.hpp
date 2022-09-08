@@ -664,7 +664,12 @@ class multicast_event
 //     std::condition_variable m_cv;
 // }
 
-enum class Signal
+/**
+ * @brief A generic signal type for use with jack::channel.
+ * It is recommended that users implement their own signal enum
+ * with more autological values to improve code readability.
+ */
+enum class signal
 {
     NONE  = 0b0000000000000000,
     SIG0  = 0b0000000000000001,
@@ -686,25 +691,46 @@ enum class Signal
     ANY   = 0b1111111111111111,
 };
 
-constexpr inline Signal operator|(Signal some, Signal other)
+/**
+ * @brief Bitwise-OR operator upon two signal values.  Enables
+ * channel::wait(SIGA | SIGB) to wait for multiple signal values.
+ * @return constexpr signal
+ */
+constexpr inline signal operator|(signal some, signal other)
 {
-    return static_cast<Signal>(static_cast<int>(some) |
+    return static_cast<signal>(static_cast<int>(some) |
                                static_cast<int>(other));
+}
+
+/**
+ * @brief Bitwise-AND operator upon two signal values.  The channel
+ * wake eligibility check requires this.  If this bitwise-AND operator
+ * evaluates to true, the thread is considered eligible to wake.
+ * 
+ * @return true if the two signals have shared set bits, else false
+ */
+constexpr inline bool operator&(signal some, signal other)
+{
+    return static_cast<bool>(static_cast<int>(some) &
+                             static_cast<int>(other));
 }
 
 /**
  * @brief Many-to-one synchronization object. Enable a consumer to
  * wait for different signal types and handle each accordingly.
+ * 
+ * A waiter is determined to be wake-eligible if a bitwise-AND between
+ * the sent signal and the waited signal returns a non-zero value.
  */
-template <typename SigTp>
-class Channel
+template <typename sig_tp>
+class channel
 {
   public:
-    explicit Channel(SigTp initial) : m_sig(initial), m_init_state(initial)
+    explicit channel(sig_tp initial) : m_sig(initial), m_init_state(initial)
     {
     }
 
-    inline SigTp wait(const SigTp& sigs)
+    inline sig_tp wait(const sig_tp& sigs)
     {
         std::unique_lock<std::mutex> lock {m_mtx};
         if (!(m_sig & sigs))
@@ -716,9 +742,9 @@ class Channel
         return m_internal_reset();
     }
 
-    template <typename Rep, typename Period>
-    inline SigTp wait_for(const SigTp sigs,
-            std::chrono::duration<Rep, Period> duration)
+    template <typename rep, typename period>
+    inline sig_tp wait_for(const sig_tp sigs,
+            std::chrono::duration<rep, period> duration)
     {
         std::unique_lock<std::mutex> lock {m_mtx};
         if (!(m_sig & sigs))
@@ -733,9 +759,9 @@ class Channel
         }
     }
 
-    template <typename Clock, typename Duration>
-    inline SigTp wait_until(const SigTp sigs,
-            std::chrono::time_point<Clock, Duration> timeout)
+    template <typename clock, typename duration>
+    inline sig_tp wait_until(const sig_tp sigs,
+            std::chrono::time_point<clock, duration> timeout)
     {
         std::unique_lock<std::mutex> lock {m_mtx};
         if (!(m_sig & sigs))
@@ -750,7 +776,7 @@ class Channel
         }
     }
 
-    inline void signal(const SigTp sig)
+    inline void signal(const sig_tp sig)
     {   
         {
             std::lock_guard<std::mutex> lock {m_mtx};
@@ -761,20 +787,20 @@ class Channel
 
   private:
 
-    inline SigTp m_internal_reset()
+    inline sig_tp m_internal_reset()
     {
-        SigTp holder = m_sig;
+        sig_tp holder = m_sig;
         m_sig = m_init_state;
         return holder;
     }
 
-    SigTp m_sig;
-    SigTp m_init_state;
+    sig_tp m_sig;
+    sig_tp m_init_state;
     std::mutex m_mtx;
     std::condition_variable m_cv;
 };
 
-// template <typename SigTp>
+// template <typename sig_tp>
 // class MuxChannel;
 
 }

@@ -526,7 +526,7 @@ class broadcast_event
  * @brief Functionally similar to jack::unicast_event except for ... TODO
  */
 class multicast_event
-{
+{   
   public:
 
     /**
@@ -561,7 +561,7 @@ class multicast_event
         if (m_set_count == 0)
         {
             ++m_wait_count;
-            bool was_set = m_cv.wait_for(wait_lock, duration, [this] {
+            was_set = m_cv.wait_for(wait_lock, duration, [this] {
                 return m_set_count > 0;
             });
             --m_wait_count;

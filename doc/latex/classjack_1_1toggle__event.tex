@@ -1,0 +1,91 @@
+\hypertarget{classjack_1_1toggle__event}{}\doxysection{jack\+::toggle\+\_\+event Class Reference}
+\label{classjack_1_1toggle__event}\index{jack::toggle\_event@{jack::toggle\_event}}
+
+
+A Python Event-\/like synchronization object. Set() will set the internal flag and wake all waiting threads. All future wait calls will return immediately until \mbox{\hyperlink{classjack_1_1toggle__event_ae2cb9c2afa774368cae2fb49537aa018}{reset()}} is called.  
+
+
+
+
+{\ttfamily \#include $<$asynchronize.\+hpp$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classjack_1_1toggle__event_aa6a2388153f771d0c749676c58d6bbb4}\label{classjack_1_1toggle__event_aa6a2388153f771d0c749676c58d6bbb4}} 
+void {\bfseries wait} ()
+\begin{DoxyCompactList}\small\item\em Block the calling thread until another thread has called \mbox{\hyperlink{classjack_1_1toggle__event_a4de2a13fe561bfdf0e122eb04d45c138}{set()}}. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename rep , typename period $>$ }\\bool \mbox{\hyperlink{classjack_1_1toggle__event_a72878dea0af7649cc3cf6039f24e27ed}{wait\+\_\+for}} (std\+::chrono\+::duration$<$ rep, period $>$ duration)
+\begin{DoxyCompactList}\small\item\em Block the calling thread until another thread has called \mbox{\hyperlink{classjack_1_1toggle__event_a4de2a13fe561bfdf0e122eb04d45c138}{set()}} or until the duration expires. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename clock , typename duration $>$ }\\bool \mbox{\hyperlink{classjack_1_1toggle__event_a22056c5dfde4ffdde6eeddac754c7a3c}{wait\+\_\+until}} (std\+::chrono\+::time\+\_\+point$<$ clock, duration $>$ timeout)
+\begin{DoxyCompactList}\small\item\em Block the calling thread until another thread has called \mbox{\hyperlink{classjack_1_1toggle__event_a4de2a13fe561bfdf0e122eb04d45c138}{set()}} or until the timeout is reached. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classjack_1_1toggle__event_a4de2a13fe561bfdf0e122eb04d45c138}\label{classjack_1_1toggle__event_a4de2a13fe561bfdf0e122eb04d45c138}} 
+void {\bfseries set} ()
+\begin{DoxyCompactList}\small\item\em Set the internal flag and wake all waiting threads. All future calls to wait will return immediately until \mbox{\hyperlink{classjack_1_1toggle__event_ae2cb9c2afa774368cae2fb49537aa018}{reset()}} is called. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classjack_1_1toggle__event_a4c2250d218a4dd3e3ac77cfcbbb5221f}{is\+\_\+set}} ()
+\begin{DoxyCompactList}\small\item\em Check if the internal flag is set. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classjack_1_1toggle__event_ae2cb9c2afa774368cae2fb49537aa018}\label{classjack_1_1toggle__event_ae2cb9c2afa774368cae2fb49537aa018}} 
+void {\bfseries reset} ()
+\begin{DoxyCompactList}\small\item\em Reset the internal flag so future wait calls will block. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+A Python Event-\/like synchronization object. Set() will set the internal flag and wake all waiting threads. All future wait calls will return immediately until \mbox{\hyperlink{classjack_1_1toggle__event_ae2cb9c2afa774368cae2fb49537aa018}{reset()}} is called. 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classjack_1_1toggle__event_a4c2250d218a4dd3e3ac77cfcbbb5221f}\label{classjack_1_1toggle__event_a4c2250d218a4dd3e3ac77cfcbbb5221f}} 
+\index{jack::toggle\_event@{jack::toggle\_event}!is\_set@{is\_set}}
+\index{is\_set@{is\_set}!jack::toggle\_event@{jack::toggle\_event}}
+\doxysubsubsection{\texorpdfstring{is\_set()}{is\_set()}}
+{\footnotesize\ttfamily bool jack\+::toggle\+\_\+event\+::is\+\_\+set (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Check if the internal flag is set. 
+
+\begin{DoxyReturn}{Returns}
+true if the flag is set, else false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classjack_1_1toggle__event_a72878dea0af7649cc3cf6039f24e27ed}\label{classjack_1_1toggle__event_a72878dea0af7649cc3cf6039f24e27ed}} 
+\index{jack::toggle\_event@{jack::toggle\_event}!wait\_for@{wait\_for}}
+\index{wait\_for@{wait\_for}!jack::toggle\_event@{jack::toggle\_event}}
+\doxysubsubsection{\texorpdfstring{wait\_for()}{wait\_for()}}
+{\footnotesize\ttfamily template$<$typename rep , typename period $>$ \\
+bool jack\+::toggle\+\_\+event\+::wait\+\_\+for (\begin{DoxyParamCaption}\item[{std\+::chrono\+::duration$<$ rep, period $>$}]{duration }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Block the calling thread until another thread has called \mbox{\hyperlink{classjack_1_1toggle__event_a4de2a13fe561bfdf0e122eb04d45c138}{set()}} or until the duration expires. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em duration} & maximum duration thread should wait \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if \mbox{\hyperlink{classjack_1_1toggle__event_a4de2a13fe561bfdf0e122eb04d45c138}{set()}} was called; false if duration expired 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classjack_1_1toggle__event_a22056c5dfde4ffdde6eeddac754c7a3c}\label{classjack_1_1toggle__event_a22056c5dfde4ffdde6eeddac754c7a3c}} 
+\index{jack::toggle\_event@{jack::toggle\_event}!wait\_until@{wait\_until}}
+\index{wait\_until@{wait\_until}!jack::toggle\_event@{jack::toggle\_event}}
+\doxysubsubsection{\texorpdfstring{wait\_until()}{wait\_until()}}
+{\footnotesize\ttfamily template$<$typename clock , typename duration $>$ \\
+bool jack\+::toggle\+\_\+event\+::wait\+\_\+until (\begin{DoxyParamCaption}\item[{std\+::chrono\+::time\+\_\+point$<$ clock, duration $>$}]{timeout }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Block the calling thread until another thread has called \mbox{\hyperlink{classjack_1_1toggle__event_a4de2a13fe561bfdf0e122eb04d45c138}{set()}} or until the timeout is reached. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em timeout} & maximum time point at which thread should stop waiting \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if \mbox{\hyperlink{classjack_1_1toggle__event_a4de2a13fe561bfdf0e122eb04d45c138}{set()}} was called; false if timeout was reached 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/jack/projects/asynchronize/include/jack/asynchronize.\+hpp\end{DoxyCompactItemize}

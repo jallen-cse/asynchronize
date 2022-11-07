@@ -1,0 +1,591 @@
+\hypertarget{asynchronize_8hpp_source}{}\doxysection{asynchronize.\+hpp}
+\label{asynchronize_8hpp_source}\index{/home/jack/projects/asynchronize/include/jack/asynchronize.hpp@{/home/jack/projects/asynchronize/include/jack/asynchronize.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#include <chrono>}}
+\DoxyCodeLine{3 \textcolor{preprocessor}{\#include <mutex>}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <atomic>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <shared\_mutex>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <condition\_variable>}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <thread>}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{keyword}{namespace }jack}
+\DoxyCodeLine{10 \{}
+\DoxyCodeLine{11 }
+\DoxyCodeLine{12 \textcolor{keyword}{class }\mbox{\hyperlink{classjack_1_1event}{event}}}
+\DoxyCodeLine{13 \{}
+\DoxyCodeLine{14     \textcolor{keyword}{using }mtx\_lg = std::lock\_guard<std::mutex>;}
+\DoxyCodeLine{15     \textcolor{keyword}{using }mtx\_ul = std::unique\_lock<std::mutex>;}
+\DoxyCodeLine{16   \textcolor{keyword}{public}:}
+\DoxyCodeLine{17     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} wait() = 0;}
+\DoxyCodeLine{18     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} wait\_for() = 0;}
+\DoxyCodeLine{19     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} wait\_until() = 0;}
+\DoxyCodeLine{20     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} set() = 0;}
+\DoxyCodeLine{21 \};}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{32 \textcolor{keyword}{class }\mbox{\hyperlink{classjack_1_1sticky__event}{sticky\_event}}}
+\DoxyCodeLine{33 \{}
+\DoxyCodeLine{34     \textcolor{keyword}{using }mtx\_lg = std::lock\_guard<std::mutex>;}
+\DoxyCodeLine{35     \textcolor{keyword}{using }mtx\_ul = std::unique\_lock<std::mutex>;}
+\DoxyCodeLine{36   \textcolor{keyword}{public}:}
+\DoxyCodeLine{37     }
+\DoxyCodeLine{43     \textcolor{keywordtype}{void} \mbox{\hyperlink{classjack_1_1sticky__event_ab191704c8a9ccf251abbb0c7c5c68b46}{wait}}()}
+\DoxyCodeLine{44     \{}
+\DoxyCodeLine{45         mtx\_ul lock \{m\_mtx\};}
+\DoxyCodeLine{46         \textcolor{keywordflow}{if} (!m\_is\_set)}
+\DoxyCodeLine{47         \{}
+\DoxyCodeLine{48             m\_cv.wait(lock, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{49                 \textcolor{keywordflow}{return} m\_is\_set;}
+\DoxyCodeLine{50             \});}
+\DoxyCodeLine{51         \}}
+\DoxyCodeLine{52         m\_is\_set = \textcolor{keyword}{false};}
+\DoxyCodeLine{53     \}}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{64     \textcolor{keyword}{template} <\textcolor{keyword}{typename} rep, \textcolor{keyword}{typename} period>}
+\DoxyCodeLine{65     \textcolor{keyword}{inline} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classjack_1_1sticky__event_a92f253ca86de522733824ccd7404cde5}{wait\_for}}(std::chrono::duration<rep, period> duration)}
+\DoxyCodeLine{66     \{}
+\DoxyCodeLine{67         mtx\_ul lock \{m\_mtx\};}
+\DoxyCodeLine{68         \textcolor{keywordtype}{bool} was\_set \{\textcolor{keyword}{true}\};}
+\DoxyCodeLine{69         \textcolor{keywordflow}{if} (!m\_is\_set)}
+\DoxyCodeLine{70         \{}
+\DoxyCodeLine{71             was\_set = m\_cv.wait\_for(lock, duration, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{72                 \textcolor{keywordflow}{return} m\_is\_set;}
+\DoxyCodeLine{73             \});}
+\DoxyCodeLine{74         \}}
+\DoxyCodeLine{75         m\_is\_set = \textcolor{keyword}{false};}
+\DoxyCodeLine{76         \textcolor{keywordflow}{return} was\_set;}
+\DoxyCodeLine{77     \}}
+\DoxyCodeLine{78 }
+\DoxyCodeLine{88     \textcolor{keyword}{template} <\textcolor{keyword}{typename} clock, \textcolor{keyword}{typename} duration>}
+\DoxyCodeLine{89     \textcolor{keyword}{inline} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classjack_1_1sticky__event_aec7ca0f923440a6828892f17850a33d3}{wait\_until}}(std::chrono::time\_point<clock, duration> timeout)}
+\DoxyCodeLine{90     \{}
+\DoxyCodeLine{91         mtx\_ul lock \{m\_mtx\};}
+\DoxyCodeLine{92         \textcolor{keywordtype}{bool} was\_set \{\textcolor{keyword}{true}\};}
+\DoxyCodeLine{93         \textcolor{keywordflow}{if} (!m\_is\_set)}
+\DoxyCodeLine{94         \{}
+\DoxyCodeLine{95             was\_set = m\_cv.wait\_until(lock, timeout, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{96                 \textcolor{keywordflow}{return} m\_is\_set;}
+\DoxyCodeLine{97             \});}
+\DoxyCodeLine{98         \}}
+\DoxyCodeLine{99         m\_is\_set = \textcolor{keyword}{false};}
+\DoxyCodeLine{100         \textcolor{keywordflow}{return} was\_set;}
+\DoxyCodeLine{101     \}}
+\DoxyCodeLine{102 }
+\DoxyCodeLine{109     \textcolor{keywordtype}{void} \mbox{\hyperlink{classjack_1_1sticky__event_a3c0c75de1ca26c0513fafb2f138027f3}{set}}()}
+\DoxyCodeLine{110     \{}
+\DoxyCodeLine{111         m\_mtx.lock();}
+\DoxyCodeLine{112         \textcolor{keywordflow}{if} (!m\_is\_set)}
+\DoxyCodeLine{113         \{}
+\DoxyCodeLine{114             m\_is\_set = \textcolor{keyword}{true};}
+\DoxyCodeLine{115             m\_mtx.unlock();}
+\DoxyCodeLine{116             m\_cv.notify\_one();}
+\DoxyCodeLine{117         \}}
+\DoxyCodeLine{118         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{119         \{}
+\DoxyCodeLine{120             m\_mtx.unlock();}
+\DoxyCodeLine{121         \}}
+\DoxyCodeLine{122     \}}
+\DoxyCodeLine{123 }
+\DoxyCodeLine{129     \textcolor{keywordtype}{bool} \mbox{\hyperlink{classjack_1_1sticky__event_a49c9524ed0f991626c52e35ef697da6e}{is\_set}}()}
+\DoxyCodeLine{130     \{}
+\DoxyCodeLine{131         mtx\_lg lock \{m\_mtx\};}
+\DoxyCodeLine{132         \textcolor{keywordflow}{return} m\_is\_set;}
+\DoxyCodeLine{133     \}}
+\DoxyCodeLine{134 }
+\DoxyCodeLine{139     \textcolor{keywordtype}{void} \mbox{\hyperlink{classjack_1_1sticky__event_a0e5cea0f2d1a953c42dee9b676d07063}{reset}}()}
+\DoxyCodeLine{140     \{}
+\DoxyCodeLine{141         mtx\_lg lock \{m\_mtx\};}
+\DoxyCodeLine{142         m\_is\_set = \textcolor{keyword}{false};}
+\DoxyCodeLine{143     \}}
+\DoxyCodeLine{144 }
+\DoxyCodeLine{145   \textcolor{keyword}{private}:}
+\DoxyCodeLine{146     \textcolor{keywordtype}{bool} m\_is\_set \{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{147     std::mutex m\_mtx;}
+\DoxyCodeLine{148     std::condition\_variable m\_cv;}
+\DoxyCodeLine{149 \};}
+\DoxyCodeLine{150 }
+\DoxyCodeLine{157 \textcolor{keyword}{class }\mbox{\hyperlink{classjack_1_1toggle__event}{toggle\_event}}}
+\DoxyCodeLine{158 \{}
+\DoxyCodeLine{159     \textcolor{keyword}{using }mtx\_lg = std::lock\_guard<std::mutex>;}
+\DoxyCodeLine{160     \textcolor{keyword}{using }mtx\_ul = std::unique\_lock<std::mutex>;}
+\DoxyCodeLine{161   \textcolor{keyword}{public}:}
+\DoxyCodeLine{162 }
+\DoxyCodeLine{167     \textcolor{keywordtype}{void} \mbox{\hyperlink{classjack_1_1toggle__event_aa6a2388153f771d0c749676c58d6bbb4}{wait}}()}
+\DoxyCodeLine{168     \{}
+\DoxyCodeLine{169         mtx\_ul lock \{m\_mtx\};}
+\DoxyCodeLine{170         \textcolor{keywordflow}{if} (!m\_is\_set)}
+\DoxyCodeLine{171         \{}
+\DoxyCodeLine{172             m\_cv.wait(lock, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{173                 \textcolor{keywordflow}{return} m\_is\_set;}
+\DoxyCodeLine{174             \});}
+\DoxyCodeLine{175         \}}
+\DoxyCodeLine{176     \}}
+\DoxyCodeLine{177 }
+\DoxyCodeLine{185     \textcolor{keyword}{template} <\textcolor{keyword}{typename} rep, \textcolor{keyword}{typename} period>}
+\DoxyCodeLine{186     \textcolor{keyword}{inline} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classjack_1_1toggle__event_a72878dea0af7649cc3cf6039f24e27ed}{wait\_for}}(std::chrono::duration<rep, period> duration)}
+\DoxyCodeLine{187     \{}
+\DoxyCodeLine{188         mtx\_ul lock \{m\_mtx\};}
+\DoxyCodeLine{189         \textcolor{keywordtype}{bool} was\_set \{\textcolor{keyword}{true}\};}
+\DoxyCodeLine{190         \textcolor{keywordflow}{if} (!m\_is\_set)}
+\DoxyCodeLine{191         \{}
+\DoxyCodeLine{192             was\_set = m\_cv.wait\_for(lock, duration, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{193                 \textcolor{keywordflow}{return} m\_is\_set;}
+\DoxyCodeLine{194             \});}
+\DoxyCodeLine{195         \}}
+\DoxyCodeLine{196         \textcolor{keywordflow}{return} was\_set;}
+\DoxyCodeLine{197     \}}
+\DoxyCodeLine{198 }
+\DoxyCodeLine{206     \textcolor{keyword}{template} <\textcolor{keyword}{typename} clock, \textcolor{keyword}{typename} duration>}
+\DoxyCodeLine{207     \textcolor{keyword}{inline} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classjack_1_1toggle__event_a22056c5dfde4ffdde6eeddac754c7a3c}{wait\_until}}(std::chrono::time\_point<clock, duration> timeout)}
+\DoxyCodeLine{208     \{}
+\DoxyCodeLine{209         mtx\_ul lock \{m\_mtx\};}
+\DoxyCodeLine{210         \textcolor{keywordtype}{bool} was\_set \{\textcolor{keyword}{true}\};}
+\DoxyCodeLine{211         \textcolor{keywordflow}{if} (!m\_is\_set)}
+\DoxyCodeLine{212         \{}
+\DoxyCodeLine{213             was\_set = m\_cv.wait\_until(lock, timeout, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{214                 \textcolor{keywordflow}{return} m\_is\_set;}
+\DoxyCodeLine{215             \});}
+\DoxyCodeLine{216         \}}
+\DoxyCodeLine{217         \textcolor{keywordflow}{return} was\_set;}
+\DoxyCodeLine{218     \}}
+\DoxyCodeLine{219 }
+\DoxyCodeLine{225     \textcolor{keywordtype}{void} \mbox{\hyperlink{classjack_1_1toggle__event_a4de2a13fe561bfdf0e122eb04d45c138}{set}}()}
+\DoxyCodeLine{226     \{}
+\DoxyCodeLine{227         m\_mtx.lock();}
+\DoxyCodeLine{228         \textcolor{keywordflow}{if} (!m\_is\_set)}
+\DoxyCodeLine{229         \{}
+\DoxyCodeLine{230             m\_is\_set = \textcolor{keyword}{true};}
+\DoxyCodeLine{231             m\_mtx.unlock();}
+\DoxyCodeLine{232             m\_cv.notify\_all();}
+\DoxyCodeLine{233         \}}
+\DoxyCodeLine{234         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{235         \{}
+\DoxyCodeLine{236             m\_mtx.unlock();}
+\DoxyCodeLine{237         \}}
+\DoxyCodeLine{238     \}}
+\DoxyCodeLine{239 }
+\DoxyCodeLine{245     \textcolor{keywordtype}{bool} \mbox{\hyperlink{classjack_1_1toggle__event_a4c2250d218a4dd3e3ac77cfcbbb5221f}{is\_set}}()}
+\DoxyCodeLine{246     \{}
+\DoxyCodeLine{247         mtx\_lg lock \{m\_mtx\};}
+\DoxyCodeLine{248         \textcolor{keywordflow}{return} m\_is\_set;}
+\DoxyCodeLine{249     \}}
+\DoxyCodeLine{250 }
+\DoxyCodeLine{255     \textcolor{keywordtype}{void} \mbox{\hyperlink{classjack_1_1toggle__event_ae2cb9c2afa774368cae2fb49537aa018}{reset}}()}
+\DoxyCodeLine{256     \{}
+\DoxyCodeLine{257         mtx\_lg lock \{m\_mtx\};}
+\DoxyCodeLine{258         m\_is\_set = \textcolor{keyword}{false};}
+\DoxyCodeLine{259     \}}
+\DoxyCodeLine{260     }
+\DoxyCodeLine{261   \textcolor{keyword}{private}:}
+\DoxyCodeLine{262     \textcolor{keywordtype}{bool} m\_is\_set \{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{263     std::mutex m\_mtx;}
+\DoxyCodeLine{264     std::condition\_variable m\_cv;}
+\DoxyCodeLine{265 \};}
+\DoxyCodeLine{266 }
+\DoxyCodeLine{280 \textcolor{keyword}{class }\mbox{\hyperlink{classjack_1_1unicast__event}{unicast\_event}}}
+\DoxyCodeLine{281 \{}
+\DoxyCodeLine{282     \textcolor{keyword}{using }mtx\_lg = std::lock\_guard<std::mutex>;}
+\DoxyCodeLine{283     \textcolor{keyword}{using }mtx\_ul = std::unique\_lock<std::mutex>;}
+\DoxyCodeLine{284   \textcolor{keyword}{public}:}
+\DoxyCodeLine{285     }
+\DoxyCodeLine{289     \textcolor{keywordtype}{void} \mbox{\hyperlink{classjack_1_1unicast__event_ad231e82dc8e6ceed0d98738aaf30269d}{wait}}()}
+\DoxyCodeLine{290     \{}
+\DoxyCodeLine{291         mtx\_ul lock \{m\_mtx\};}
+\DoxyCodeLine{292         ++m\_wait\_count;}
+\DoxyCodeLine{293         m\_cv.wait(lock, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{294             \textcolor{keywordflow}{return} m\_set\_count > 0;}
+\DoxyCodeLine{295         \});}
+\DoxyCodeLine{296         -\/-\/m\_wait\_count;}
+\DoxyCodeLine{297         -\/-\/m\_set\_count;}
+\DoxyCodeLine{298     \}}
+\DoxyCodeLine{299 }
+\DoxyCodeLine{307     \textcolor{keyword}{template} <\textcolor{keyword}{typename} rep, \textcolor{keyword}{typename} period>}
+\DoxyCodeLine{308     \textcolor{keyword}{inline} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classjack_1_1unicast__event_a1c8480441f13d6e5a9355f5b93cded93}{wait\_for}}(std::chrono::duration<rep, period> duration)}
+\DoxyCodeLine{309     \{}
+\DoxyCodeLine{310         mtx\_ul lock \{m\_mtx\};}
+\DoxyCodeLine{311         ++m\_wait\_count;}
+\DoxyCodeLine{312         \textcolor{keyword}{const} \textcolor{keywordtype}{bool} was\_set = m\_cv.wait\_for(lock, duration, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{313             \textcolor{keywordflow}{return} m\_set\_count > 0;}
+\DoxyCodeLine{314         \});}
+\DoxyCodeLine{315         -\/-\/m\_wait\_count;}
+\DoxyCodeLine{316         m\_set\_count -\/= (uint16\_t)was\_set;}
+\DoxyCodeLine{317         \textcolor{keywordflow}{return} was\_set;}
+\DoxyCodeLine{318     \}}
+\DoxyCodeLine{319 }
+\DoxyCodeLine{327     \textcolor{keyword}{template} <\textcolor{keyword}{typename} clock, \textcolor{keyword}{typename} duration>}
+\DoxyCodeLine{328     \textcolor{keyword}{inline} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classjack_1_1unicast__event_ac4ce98b85b5f48e98fc8d4533c27495c}{wait\_until}}(std::chrono::time\_point<clock, duration> timeout)}
+\DoxyCodeLine{329     \{}
+\DoxyCodeLine{330         mtx\_ul lock \{m\_mtx\};}
+\DoxyCodeLine{331         ++m\_wait\_count;}
+\DoxyCodeLine{332         \textcolor{keyword}{const} \textcolor{keywordtype}{bool} was\_set = m\_cv.wait\_until(lock, timeout, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{333             \textcolor{keywordflow}{return} m\_set\_count > 0;}
+\DoxyCodeLine{334         \});}
+\DoxyCodeLine{335         -\/-\/m\_wait\_count;}
+\DoxyCodeLine{336         m\_set\_count -\/= (uint16\_t)was\_set;}
+\DoxyCodeLine{337         \textcolor{keywordflow}{return} was\_set;}
+\DoxyCodeLine{338     \}}
+\DoxyCodeLine{339 }
+\DoxyCodeLine{343     \textcolor{keywordtype}{void} \mbox{\hyperlink{classjack_1_1unicast__event_abcd6c515f5a292f60331b9963a14f70e}{set}}()}
+\DoxyCodeLine{344     \{}
+\DoxyCodeLine{345         m\_mtx.lock();}
+\DoxyCodeLine{346         \textcolor{keywordflow}{if} (m\_wait\_count > m\_set\_count)}
+\DoxyCodeLine{347         \{}
+\DoxyCodeLine{348             ++m\_set\_count;}
+\DoxyCodeLine{349             m\_mtx.unlock();}
+\DoxyCodeLine{350             m\_cv.notify\_one();}
+\DoxyCodeLine{351         \}}
+\DoxyCodeLine{352         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{353         \{}
+\DoxyCodeLine{354             m\_mtx.unlock();}
+\DoxyCodeLine{355         \}}
+\DoxyCodeLine{356     \}}
+\DoxyCodeLine{357 }
+\DoxyCodeLine{358   \textcolor{keyword}{private}:}
+\DoxyCodeLine{359 }
+\DoxyCodeLine{361     uint16\_t m\_wait\_count \{0\};}
+\DoxyCodeLine{362     }
+\DoxyCodeLine{366     uint16\_t m\_set\_count \{0\};}
+\DoxyCodeLine{367 }
+\DoxyCodeLine{369     std::mutex m\_mtx;}
+\DoxyCodeLine{370     }
+\DoxyCodeLine{372     std::condition\_variable m\_cv;}
+\DoxyCodeLine{373 \};}
+\DoxyCodeLine{374 }
+\DoxyCodeLine{383 \textcolor{keyword}{class }\mbox{\hyperlink{classjack_1_1multicast__event}{multicast\_event}}}
+\DoxyCodeLine{384 \{}
+\DoxyCodeLine{385   \textcolor{keyword}{public}:}
+\DoxyCodeLine{386     }
+\DoxyCodeLine{391     \textcolor{keyword}{inline} \textcolor{keywordtype}{void} \mbox{\hyperlink{classjack_1_1multicast__event_a08538411df4579b53bdef61caaeff3d5}{wait}}()}
+\DoxyCodeLine{392     \{}
+\DoxyCodeLine{393         \textcolor{keyword}{auto} wait\_lock = m\_enter\_waiting\_pool();}
+\DoxyCodeLine{394         m\_cv.wait(wait\_lock, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{395             \textcolor{keywordflow}{return} m\_is\_set;}
+\DoxyCodeLine{396         \});}
+\DoxyCodeLine{397         }
+\DoxyCodeLine{398         \textcolor{comment}{// unlock pool if we are the last waiter}}
+\DoxyCodeLine{399         \textcolor{keywordflow}{if} (!(m\_is\_set = (-\/-\/m\_wait\_count) > 0))}
+\DoxyCodeLine{400         \{}
+\DoxyCodeLine{401             m\_pool\_mtx.unlock();}
+\DoxyCodeLine{402         \}}
+\DoxyCodeLine{403     \}}
+\DoxyCodeLine{404 }
+\DoxyCodeLine{412     \textcolor{keyword}{template} <\textcolor{keyword}{typename} rep, \textcolor{keyword}{typename} period>}
+\DoxyCodeLine{413     \textcolor{keyword}{inline} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classjack_1_1multicast__event_a2c9dcf76bc1c428b10f707fbe720a09f}{wait\_for}}(std::chrono::duration<rep, period> duration)}
+\DoxyCodeLine{414     \{}
+\DoxyCodeLine{415         \textcolor{keyword}{auto} wait\_lock = m\_enter\_waiting\_pool();}
+\DoxyCodeLine{416         \textcolor{keyword}{const} \textcolor{keywordtype}{bool} was\_set = m\_cv.wait\_for(wait\_lock, duration, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{417             \textcolor{keywordflow}{return} m\_is\_set;}
+\DoxyCodeLine{418         \});}
+\DoxyCodeLine{419 }
+\DoxyCodeLine{420         \textcolor{comment}{// if set() was called, pool is locked and}}
+\DoxyCodeLine{421         \textcolor{comment}{// we might be responsible for unlocking}}
+\DoxyCodeLine{422         \textcolor{keywordflow}{if} (was\_set)}
+\DoxyCodeLine{423         \{}
+\DoxyCodeLine{424             \textcolor{comment}{// unlock pool if we are the last waiter}}
+\DoxyCodeLine{425             \textcolor{keywordflow}{if} (!(m\_is\_set = (-\/-\/m\_wait\_count) > 0))}
+\DoxyCodeLine{426             \{}
+\DoxyCodeLine{427                 m\_pool\_mtx.unlock();}
+\DoxyCodeLine{428             \}}
+\DoxyCodeLine{429         \}}
+\DoxyCodeLine{430         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{431         \{            }
+\DoxyCodeLine{432             -\/-\/m\_wait\_count;}
+\DoxyCodeLine{433         \}}
+\DoxyCodeLine{434 }
+\DoxyCodeLine{435         \textcolor{keywordflow}{return} was\_set;}
+\DoxyCodeLine{436     \}}
+\DoxyCodeLine{437 }
+\DoxyCodeLine{445     \textcolor{keyword}{template} <\textcolor{keyword}{typename} clock, \textcolor{keyword}{typename} duration>}
+\DoxyCodeLine{446     \textcolor{keyword}{inline} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classjack_1_1multicast__event_a5d710d42da6c3422a3efde15830e05b2}{wait\_until}}(std::chrono::time\_point<clock, duration> timeout)}
+\DoxyCodeLine{447     \{}
+\DoxyCodeLine{448         \textcolor{keyword}{auto} wait\_lock = m\_enter\_waiting\_pool();}
+\DoxyCodeLine{449         \textcolor{keyword}{const} \textcolor{keywordtype}{bool} was\_set = m\_cv.wait\_until(wait\_lock, timeout, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{450             \textcolor{keywordflow}{return} m\_is\_set;}
+\DoxyCodeLine{451         \});}
+\DoxyCodeLine{452 }
+\DoxyCodeLine{453         \textcolor{comment}{// if set() was called, pool is locked and}}
+\DoxyCodeLine{454         \textcolor{comment}{// we might be responsible for unlocking}}
+\DoxyCodeLine{455         \textcolor{keywordflow}{if} (was\_set)}
+\DoxyCodeLine{456         \{}
+\DoxyCodeLine{457             \textcolor{comment}{// unlock pool if we are the last waiter}}
+\DoxyCodeLine{458             \textcolor{keywordflow}{if} (!(m\_is\_set = (-\/-\/m\_wait\_count) > 0))}
+\DoxyCodeLine{459             \{}
+\DoxyCodeLine{460                 m\_pool\_mtx.unlock();}
+\DoxyCodeLine{461             \}}
+\DoxyCodeLine{462         \}}
+\DoxyCodeLine{463         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{464         \{            }
+\DoxyCodeLine{465             -\/-\/m\_wait\_count;}
+\DoxyCodeLine{466         \}}
+\DoxyCodeLine{467 }
+\DoxyCodeLine{468         \textcolor{keywordflow}{return} was\_set;}
+\DoxyCodeLine{469     \}}
+\DoxyCodeLine{470 }
+\DoxyCodeLine{475     \textcolor{keyword}{inline} \textcolor{keywordtype}{void} \mbox{\hyperlink{classjack_1_1multicast__event_a7e2dbb0e140253c46add58fd182f92b7}{set}}()}
+\DoxyCodeLine{476     \{}
+\DoxyCodeLine{477         m\_pool\_mtx.lock();}
+\DoxyCodeLine{478         m\_wait\_mtx.lock();}
+\DoxyCodeLine{479         \textcolor{keywordflow}{if} ((m\_is\_set = m\_wait\_count) > 0)}
+\DoxyCodeLine{480         \{}
+\DoxyCodeLine{481             m\_wait\_mtx.unlock();}
+\DoxyCodeLine{482             m\_cv.notify\_all();}
+\DoxyCodeLine{483         \}}
+\DoxyCodeLine{484         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{485         \{}
+\DoxyCodeLine{486             m\_wait\_mtx.unlock();}
+\DoxyCodeLine{487             m\_pool\_mtx.unlock();}
+\DoxyCodeLine{488         \}}
+\DoxyCodeLine{489     \}}
+\DoxyCodeLine{490 }
+\DoxyCodeLine{491   \textcolor{keyword}{private}:}
+\DoxyCodeLine{492 }
+\DoxyCodeLine{499     std::unique\_lock<std::mutex> m\_enter\_waiting\_pool()}
+\DoxyCodeLine{500     \{}
+\DoxyCodeLine{501         m\_pool\_mtx.lock();}
+\DoxyCodeLine{502         std::unique\_lock<std::mutex> wait\_lock \{m\_wait\_mtx\};}
+\DoxyCodeLine{503         ++m\_wait\_count;}
+\DoxyCodeLine{504         m\_pool\_mtx.unlock();}
+\DoxyCodeLine{505         \textcolor{keywordflow}{return} wait\_lock;}
+\DoxyCodeLine{506     \}}
+\DoxyCodeLine{507 }
+\DoxyCodeLine{509     \textcolor{keywordtype}{bool} m\_is\_set \{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{510 }
+\DoxyCodeLine{512     uint16\_t m\_wait\_count \{0\};}
+\DoxyCodeLine{513     }
+\DoxyCodeLine{515     std::mutex m\_wait\_mtx;}
+\DoxyCodeLine{516     }
+\DoxyCodeLine{518     std::mutex m\_pool\_mtx;}
+\DoxyCodeLine{519     }
+\DoxyCodeLine{521     std::condition\_variable m\_cv;}
+\DoxyCodeLine{522 \};}
+\DoxyCodeLine{523 }
+\DoxyCodeLine{524 }
+\DoxyCodeLine{528 \textcolor{keyword}{class }\mbox{\hyperlink{classjack_1_1broadcast__event}{broadcast\_event}}}
+\DoxyCodeLine{529 \{   }
+\DoxyCodeLine{530   \textcolor{keyword}{public}:}
+\DoxyCodeLine{531 }
+\DoxyCodeLine{535     \textcolor{keywordtype}{void} \mbox{\hyperlink{classjack_1_1broadcast__event_a92bafe9ec8345ec97488ce9b87b99eff}{wait}}()}
+\DoxyCodeLine{536     \{}
+\DoxyCodeLine{537         std::unique\_lock<std::mutex> wait\_lock \{m\_mtx\};}
+\DoxyCodeLine{538         \textcolor{keywordflow}{if} (m\_set\_count == 0)}
+\DoxyCodeLine{539         \{}
+\DoxyCodeLine{540             ++m\_wait\_count;}
+\DoxyCodeLine{541             m\_cv.wait(wait\_lock, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{542                 \textcolor{keywordflow}{return} m\_set\_count > 0;}
+\DoxyCodeLine{543             \});}
+\DoxyCodeLine{544             -\/-\/m\_wait\_count;}
+\DoxyCodeLine{545         \}}
+\DoxyCodeLine{546         -\/-\/m\_set\_count;}
+\DoxyCodeLine{547     \}}
+\DoxyCodeLine{548 }
+\DoxyCodeLine{556     \textcolor{keyword}{template} <\textcolor{keyword}{typename} rep, \textcolor{keyword}{typename} period>}
+\DoxyCodeLine{557     \textcolor{keyword}{inline} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classjack_1_1broadcast__event_aaa45d8ea7fb88ef1ceff79cb61a5ede6}{wait\_for}}(std::chrono::duration<rep, period> duration)}
+\DoxyCodeLine{558     \{}
+\DoxyCodeLine{559         std::unique\_lock<std::mutex> wait\_lock \{m\_mtx\};}
+\DoxyCodeLine{560         \textcolor{keywordtype}{bool} was\_set \{\textcolor{keyword}{true}\};}
+\DoxyCodeLine{561         \textcolor{keywordflow}{if} (m\_set\_count == 0)}
+\DoxyCodeLine{562         \{}
+\DoxyCodeLine{563             ++m\_wait\_count;}
+\DoxyCodeLine{564             was\_set = m\_cv.wait\_for(wait\_lock, duration, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{565                 \textcolor{keywordflow}{return} m\_set\_count > 0;}
+\DoxyCodeLine{566             \});}
+\DoxyCodeLine{567             -\/-\/m\_wait\_count;}
+\DoxyCodeLine{568 }
+\DoxyCodeLine{569         \}}
+\DoxyCodeLine{570         m\_set\_count -\/= (uint16\_t)was\_set;}
+\DoxyCodeLine{571         \textcolor{keywordflow}{return} was\_set;}
+\DoxyCodeLine{572     \}}
+\DoxyCodeLine{573 }
+\DoxyCodeLine{581     \textcolor{keyword}{template} <\textcolor{keyword}{typename} clock, \textcolor{keyword}{typename} duration>}
+\DoxyCodeLine{582     \textcolor{keyword}{inline} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classjack_1_1broadcast__event_ab09d398d61d7de2acbdc8990152179f6}{wait\_until}}(std::chrono::time\_point<clock, duration> timeout)}
+\DoxyCodeLine{583     \{}
+\DoxyCodeLine{584         std::unique\_lock<std::mutex> wait\_lock \{m\_mtx\};}
+\DoxyCodeLine{585         \textcolor{keywordtype}{bool} was\_set \{\textcolor{keyword}{true}\};}
+\DoxyCodeLine{586         \textcolor{keywordflow}{if} (m\_set\_count == 0)}
+\DoxyCodeLine{587         \{}
+\DoxyCodeLine{588             ++m\_wait\_count;}
+\DoxyCodeLine{589             was\_set = m\_cv.wait\_until(wait\_lock, timeout, [\textcolor{keyword}{this}] \{}
+\DoxyCodeLine{590                 \textcolor{keywordflow}{return} m\_set\_count > 0;}
+\DoxyCodeLine{591             \});}
+\DoxyCodeLine{592             -\/-\/m\_wait\_count;}
+\DoxyCodeLine{593         \}}
+\DoxyCodeLine{594         m\_set\_count -\/= (uint16\_t)was\_set;}
+\DoxyCodeLine{595         \textcolor{keywordflow}{return} was\_set;}
+\DoxyCodeLine{596     \}}
+\DoxyCodeLine{597 }
+\DoxyCodeLine{606     \textcolor{keywordtype}{void} \mbox{\hyperlink{classjack_1_1broadcast__event_ab59282e2d5d0eb5b11580dc817ed8078}{set}}()}
+\DoxyCodeLine{607     \{}
+\DoxyCodeLine{608         m\_mtx.lock();}
+\DoxyCodeLine{609         \textcolor{keywordflow}{if} (m\_wait\_count > 0)}
+\DoxyCodeLine{610         \{}
+\DoxyCodeLine{611             \textcolor{comment}{// we need to wake m\_wait\_count waiters}}
+\DoxyCodeLine{612             \textcolor{comment}{// increment because set() could be called before}}
+\DoxyCodeLine{613             \textcolor{comment}{// all the previous wakes occur}}
+\DoxyCodeLine{614             m\_set\_count += m\_wait\_count;}
+\DoxyCodeLine{615             m\_mtx.unlock();}
+\DoxyCodeLine{616             m\_cv.notify\_all();}
+\DoxyCodeLine{617         \}}
+\DoxyCodeLine{618         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{619         \{}
+\DoxyCodeLine{620             m\_mtx.unlock();}
+\DoxyCodeLine{621         \}}
+\DoxyCodeLine{622     \}}
+\DoxyCodeLine{623 }
+\DoxyCodeLine{624   \textcolor{keyword}{private}:}
+\DoxyCodeLine{625     }
+\DoxyCodeLine{627     uint16\_t m\_wait\_count \{0\};}
+\DoxyCodeLine{628     }
+\DoxyCodeLine{630     uint16\_t m\_set\_count \{0\};}
+\DoxyCodeLine{631 }
+\DoxyCodeLine{633     std::mutex m\_mtx;}
+\DoxyCodeLine{634     }
+\DoxyCodeLine{636     std::condition\_variable m\_cv;}
+\DoxyCodeLine{637     }
+\DoxyCodeLine{638 \};}
+\DoxyCodeLine{639 }
+\DoxyCodeLine{640 \textcolor{comment}{// /**}}
+\DoxyCodeLine{641 \textcolor{comment}{//  * @brief Generic event}}
+\DoxyCodeLine{642 \textcolor{comment}{//  * }}
+\DoxyCodeLine{643 \textcolor{comment}{//  * @tparam condition must evaluate to true for set() to wake a thread}}
+\DoxyCodeLine{644 \textcolor{comment}{//  */}}
+\DoxyCodeLine{645 \textcolor{comment}{// template <typename condition>}}
+\DoxyCodeLine{646 \textcolor{comment}{// class event}}
+\DoxyCodeLine{647 \textcolor{comment}{// \{   }}
+\DoxyCodeLine{648 \textcolor{comment}{//     using mtx\_ul = std::unique\_lock<std::mutex>;}}
+\DoxyCodeLine{649 \textcolor{comment}{//     using mtx\_lg = std::lock\_guard<std::mutex>;}}
+\DoxyCodeLine{650 }
+\DoxyCodeLine{651 \textcolor{comment}{//     template <typename predicate>}}
+\DoxyCodeLine{652 \textcolor{comment}{//     inline void wait(predicate\& pred)}}
+\DoxyCodeLine{653 \textcolor{comment}{//     \{}}
+\DoxyCodeLine{654 \textcolor{comment}{//         mtx\_ul lock \{m\_mtx\};}}
+\DoxyCodeLine{655 \textcolor{comment}{//         m\_cv.wait(lock, pred);}}
+\DoxyCodeLine{656 \textcolor{comment}{//     \}}}
+\DoxyCodeLine{657 }
+\DoxyCodeLine{658 \textcolor{comment}{//     inline void set()}}
+\DoxyCodeLine{659 \textcolor{comment}{//     \{}}
+\DoxyCodeLine{660 \textcolor{comment}{//         m\_cv.notify\_all();}}
+\DoxyCodeLine{661 \textcolor{comment}{//     \}}}
+\DoxyCodeLine{662 }
+\DoxyCodeLine{663 \textcolor{comment}{//     std::mutex m\_mtx;}}
+\DoxyCodeLine{664 \textcolor{comment}{//     std::condition\_variable m\_cv;}}
+\DoxyCodeLine{665 \textcolor{comment}{// \}}}
+\DoxyCodeLine{666 }
+\DoxyCodeLine{672 \textcolor{keyword}{enum class} signal}
+\DoxyCodeLine{673 \{}
+\DoxyCodeLine{674     NONE  = 0b0000000000000000,}
+\DoxyCodeLine{675     SIG0  = 0b0000000000000001,}
+\DoxyCodeLine{676     SIG1  = 0b0000000000000010,}
+\DoxyCodeLine{677     SIG2  = 0b0000000000000100,}
+\DoxyCodeLine{678     SIG3  = 0b0000000000001000,}
+\DoxyCodeLine{679     SIG4  = 0b0000000000010000,}
+\DoxyCodeLine{680     SIG5  = 0b0000000000100000,}
+\DoxyCodeLine{681     SIG6  = 0b0000000001000000,}
+\DoxyCodeLine{682     SIG7  = 0b0000000010000000,}
+\DoxyCodeLine{683     SIG8  = 0b0000000100000000,}
+\DoxyCodeLine{684     SIG9  = 0b0000001000000000,}
+\DoxyCodeLine{685     SIG10 = 0b0000010000000000,}
+\DoxyCodeLine{686     SIG11 = 0b0000100000000000,}
+\DoxyCodeLine{687     SIG12 = 0b0001000000000000,}
+\DoxyCodeLine{688     SIG13 = 0b0010000000000000,}
+\DoxyCodeLine{689     SIG14 = 0b0100000000000000,}
+\DoxyCodeLine{690     SIG15 = 0b1000000000000000,}
+\DoxyCodeLine{691     ANY   = 0b1111111111111111,}
+\DoxyCodeLine{692 \};}
+\DoxyCodeLine{693 }
+\DoxyCodeLine{699 \textcolor{keyword}{constexpr} \textcolor{keyword}{inline} signal operator|(signal some, signal other)}
+\DoxyCodeLine{700 \{}
+\DoxyCodeLine{701     \textcolor{keywordflow}{return} \textcolor{keyword}{static\_cast<}signal\textcolor{keyword}{>}(\textcolor{keyword}{static\_cast<}\textcolor{keywordtype}{int}\textcolor{keyword}{>}(some) |}
+\DoxyCodeLine{702                                \textcolor{keyword}{static\_cast<}\textcolor{keywordtype}{int}\textcolor{keyword}{>}(other));}
+\DoxyCodeLine{703 \}}
+\DoxyCodeLine{704 }
+\DoxyCodeLine{712 \textcolor{keyword}{constexpr} \textcolor{keyword}{inline} \textcolor{keywordtype}{bool} operator\&(signal some, signal other)}
+\DoxyCodeLine{713 \{}
+\DoxyCodeLine{714     \textcolor{keywordflow}{return} \textcolor{keyword}{static\_cast<}\textcolor{keywordtype}{bool}\textcolor{keyword}{>}(\textcolor{keyword}{static\_cast<}\textcolor{keywordtype}{int}\textcolor{keyword}{>}(some) \&}
+\DoxyCodeLine{715                              \textcolor{keyword}{static\_cast<}\textcolor{keywordtype}{int}\textcolor{keyword}{>}(other));}
+\DoxyCodeLine{716 \}}
+\DoxyCodeLine{717 }
+\DoxyCodeLine{725 \textcolor{keyword}{template} <\textcolor{keyword}{typename} sig\_tp>}
+\DoxyCodeLine{726 \textcolor{keyword}{class }\mbox{\hyperlink{classjack_1_1channel}{channel}}}
+\DoxyCodeLine{727 \{}
+\DoxyCodeLine{728   \textcolor{keyword}{public}:}
+\DoxyCodeLine{729     \textcolor{keyword}{explicit} \mbox{\hyperlink{classjack_1_1channel}{channel}}(sig\_tp initial) : m\_sig(initial), m\_init\_state(initial)}
+\DoxyCodeLine{730     \{}
+\DoxyCodeLine{731     \}}
+\DoxyCodeLine{732 }
+\DoxyCodeLine{733     \textcolor{keyword}{inline} sig\_tp wait(\textcolor{keyword}{const} sig\_tp\& sigs)}
+\DoxyCodeLine{734     \{}
+\DoxyCodeLine{735         std::unique\_lock<std::mutex> lock \{m\_mtx\};}
+\DoxyCodeLine{736         \textcolor{keywordflow}{if} (!(m\_sig \& sigs))}
+\DoxyCodeLine{737         \{}
+\DoxyCodeLine{738             m\_cv.wait(lock, [\&] \{}
+\DoxyCodeLine{739                 \textcolor{keywordflow}{return} m\_sig \& sigs;}
+\DoxyCodeLine{740             \});}
+\DoxyCodeLine{741         \}}
+\DoxyCodeLine{742         \textcolor{keywordflow}{return} m\_internal\_reset();}
+\DoxyCodeLine{743     \}}
+\DoxyCodeLine{744 }
+\DoxyCodeLine{745     \textcolor{keyword}{template} <\textcolor{keyword}{typename} rep, \textcolor{keyword}{typename} period>}
+\DoxyCodeLine{746     \textcolor{keyword}{inline} sig\_tp wait\_for(\textcolor{keyword}{const} sig\_tp sigs,}
+\DoxyCodeLine{747             std::chrono::duration<rep, period> duration)}
+\DoxyCodeLine{748     \{}
+\DoxyCodeLine{749         std::unique\_lock<std::mutex> lock \{m\_mtx\};}
+\DoxyCodeLine{750         \textcolor{keywordflow}{if} (!(m\_sig \& sigs))}
+\DoxyCodeLine{751         \{}
+\DoxyCodeLine{752             \textcolor{keywordflow}{return} m\_cv.wait\_for(lock, duration, [\&] \{}
+\DoxyCodeLine{753                 \textcolor{keywordflow}{return} m\_sig \& sigs;}
+\DoxyCodeLine{754             \}) ? m\_internal\_reset() : m\_init\_state;}
+\DoxyCodeLine{755         \}}
+\DoxyCodeLine{756         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{757         \{}
+\DoxyCodeLine{758             \textcolor{keywordflow}{return} m\_internal\_reset();}
+\DoxyCodeLine{759         \}}
+\DoxyCodeLine{760     \}}
+\DoxyCodeLine{761 }
+\DoxyCodeLine{762     \textcolor{keyword}{template} <\textcolor{keyword}{typename} clock, \textcolor{keyword}{typename} duration>}
+\DoxyCodeLine{763     \textcolor{keyword}{inline} sig\_tp wait\_until(\textcolor{keyword}{const} sig\_tp sigs,}
+\DoxyCodeLine{764             std::chrono::time\_point<clock, duration> timeout)}
+\DoxyCodeLine{765     \{}
+\DoxyCodeLine{766         std::unique\_lock<std::mutex> lock \{m\_mtx\};}
+\DoxyCodeLine{767         \textcolor{keywordflow}{if} (!(m\_sig \& sigs))}
+\DoxyCodeLine{768         \{}
+\DoxyCodeLine{769             \textcolor{keywordflow}{return} m\_cv.wait\_until(lock, timeout, [\&] \{}
+\DoxyCodeLine{770                 \textcolor{keywordflow}{return} m\_sig \& sigs;}
+\DoxyCodeLine{771             \}) ? m\_internal\_reset() : m\_init\_state;}
+\DoxyCodeLine{772         \}}
+\DoxyCodeLine{773         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{774         \{}
+\DoxyCodeLine{775             \textcolor{keywordflow}{return} m\_internal\_reset();}
+\DoxyCodeLine{776         \}}
+\DoxyCodeLine{777     \}}
+\DoxyCodeLine{778 }
+\DoxyCodeLine{779     \textcolor{keyword}{inline} \textcolor{keywordtype}{void} signal(\textcolor{keyword}{const} sig\_tp sig)}
+\DoxyCodeLine{780     \{   }
+\DoxyCodeLine{781         \{}
+\DoxyCodeLine{782             std::lock\_guard<std::mutex> lock \{m\_mtx\};}
+\DoxyCodeLine{783             m\_sig = sig;}
+\DoxyCodeLine{784         \}}
+\DoxyCodeLine{785         m\_cv.notify\_one();}
+\DoxyCodeLine{786     \}}
+\DoxyCodeLine{787 }
+\DoxyCodeLine{788   \textcolor{keyword}{private}:}
+\DoxyCodeLine{789 }
+\DoxyCodeLine{790     \textcolor{keyword}{inline} sig\_tp m\_internal\_reset()}
+\DoxyCodeLine{791     \{}
+\DoxyCodeLine{792         sig\_tp holder = m\_sig;}
+\DoxyCodeLine{793         m\_sig = m\_init\_state;}
+\DoxyCodeLine{794         \textcolor{keywordflow}{return} holder;}
+\DoxyCodeLine{795     \}}
+\DoxyCodeLine{796 }
+\DoxyCodeLine{797     sig\_tp m\_sig;}
+\DoxyCodeLine{798     sig\_tp m\_init\_state;}
+\DoxyCodeLine{799     std::mutex m\_mtx;}
+\DoxyCodeLine{800     std::condition\_variable m\_cv;}
+\DoxyCodeLine{801 \};}
+\DoxyCodeLine{802 }
+\DoxyCodeLine{803 \textcolor{comment}{// template <typename sig\_tp>}}
+\DoxyCodeLine{804 \textcolor{comment}{// class MuxChannel;}}
+\DoxyCodeLine{805 }
+\DoxyCodeLine{806 \}}
+
+\end{DoxyCode}

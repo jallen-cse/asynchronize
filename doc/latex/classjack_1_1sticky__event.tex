@@ -1,0 +1,96 @@
+\hypertarget{classjack_1_1sticky__event}{}\doxysection{jack\+::sticky\+\_\+event Class Reference}
+\label{classjack_1_1sticky__event}\index{jack::sticky\_event@{jack::sticky\_event}}
+
+
+A thread synchronization object that garauntees one thread is woken per \mbox{\hyperlink{classjack_1_1sticky__event_a3c0c75de1ca26c0513fafb2f138027f3}{set()}} call. This means that if no threads are waiting when \mbox{\hyperlink{classjack_1_1sticky__event_a3c0c75de1ca26c0513fafb2f138027f3}{set()}} is called, the next wait will return immediately.  
+
+
+
+
+{\ttfamily \#include $<$asynchronize.\+hpp$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classjack_1_1sticky__event_ab191704c8a9ccf251abbb0c7c5c68b46}\label{classjack_1_1sticky__event_ab191704c8a9ccf251abbb0c7c5c68b46}} 
+void {\bfseries wait} ()
+\begin{DoxyCompactList}\small\item\em Block the calling thread until another thread has called set. If multiple threads are waiting, it is unspecified which will be woken. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename rep , typename period $>$ }\\bool \mbox{\hyperlink{classjack_1_1sticky__event_a92f253ca86de522733824ccd7404cde5}{wait\+\_\+for}} (std\+::chrono\+::duration$<$ rep, period $>$ duration)
+\begin{DoxyCompactList}\small\item\em Block the calling thread until another thread has called \mbox{\hyperlink{classjack_1_1sticky__event_a3c0c75de1ca26c0513fafb2f138027f3}{set()}} or until the duration expires. If multiple threads are waiting, it is unspecified which will be woken. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename clock , typename duration $>$ }\\bool \mbox{\hyperlink{classjack_1_1sticky__event_aec7ca0f923440a6828892f17850a33d3}{wait\+\_\+until}} (std\+::chrono\+::time\+\_\+point$<$ clock, duration $>$ timeout)
+\begin{DoxyCompactList}\small\item\em Block the calling thread until another thread has called \mbox{\hyperlink{classjack_1_1sticky__event_a3c0c75de1ca26c0513fafb2f138027f3}{set()}} or until the timeout is reached. If multiple threads are waiting, it is unspecified which will be woken. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classjack_1_1sticky__event_a3c0c75de1ca26c0513fafb2f138027f3}\label{classjack_1_1sticky__event_a3c0c75de1ca26c0513fafb2f138027f3}} 
+void {\bfseries set} ()
+\begin{DoxyCompactList}\small\item\em Set the internal flag and wake at most one waiting thread. If there are no waiters, the next call to wait will return immediately. If there are multiple waiters, it is unspecified which will be woken. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classjack_1_1sticky__event_a49c9524ed0f991626c52e35ef697da6e}{is\+\_\+set}} ()
+\begin{DoxyCompactList}\small\item\em Check if the internal flag is set. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classjack_1_1sticky__event_a0e5cea0f2d1a953c42dee9b676d07063}\label{classjack_1_1sticky__event_a0e5cea0f2d1a953c42dee9b676d07063}} 
+void {\bfseries reset} ()
+\begin{DoxyCompactList}\small\item\em Reset the internal flag so future wait calls will block. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+A thread synchronization object that garauntees one thread is woken per \mbox{\hyperlink{classjack_1_1sticky__event_a3c0c75de1ca26c0513fafb2f138027f3}{set()}} call. This means that if no threads are waiting when \mbox{\hyperlink{classjack_1_1sticky__event_a3c0c75de1ca26c0513fafb2f138027f3}{set()}} is called, the next wait will return immediately. 
+
+\begin{DoxyNote}{Note}
+Calling \mbox{\hyperlink{classjack_1_1sticky__event_a3c0c75de1ca26c0513fafb2f138027f3}{set()}} multiple times between waiters will have no additional effect. 
+\end{DoxyNote}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classjack_1_1sticky__event_a49c9524ed0f991626c52e35ef697da6e}\label{classjack_1_1sticky__event_a49c9524ed0f991626c52e35ef697da6e}} 
+\index{jack::sticky\_event@{jack::sticky\_event}!is\_set@{is\_set}}
+\index{is\_set@{is\_set}!jack::sticky\_event@{jack::sticky\_event}}
+\doxysubsubsection{\texorpdfstring{is\_set()}{is\_set()}}
+{\footnotesize\ttfamily bool jack\+::sticky\+\_\+event\+::is\+\_\+set (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Check if the internal flag is set. 
+
+\begin{DoxyReturn}{Returns}
+true if the flag is set, else false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classjack_1_1sticky__event_a92f253ca86de522733824ccd7404cde5}\label{classjack_1_1sticky__event_a92f253ca86de522733824ccd7404cde5}} 
+\index{jack::sticky\_event@{jack::sticky\_event}!wait\_for@{wait\_for}}
+\index{wait\_for@{wait\_for}!jack::sticky\_event@{jack::sticky\_event}}
+\doxysubsubsection{\texorpdfstring{wait\_for()}{wait\_for()}}
+{\footnotesize\ttfamily template$<$typename rep , typename period $>$ \\
+bool jack\+::sticky\+\_\+event\+::wait\+\_\+for (\begin{DoxyParamCaption}\item[{std\+::chrono\+::duration$<$ rep, period $>$}]{duration }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Block the calling thread until another thread has called \mbox{\hyperlink{classjack_1_1sticky__event_a3c0c75de1ca26c0513fafb2f138027f3}{set()}} or until the duration expires. If multiple threads are waiting, it is unspecified which will be woken. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em duration} & maximum duration thread should wait \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if \mbox{\hyperlink{classjack_1_1sticky__event_a3c0c75de1ca26c0513fafb2f138027f3}{set()}} was called; false if duration expired 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classjack_1_1sticky__event_aec7ca0f923440a6828892f17850a33d3}\label{classjack_1_1sticky__event_aec7ca0f923440a6828892f17850a33d3}} 
+\index{jack::sticky\_event@{jack::sticky\_event}!wait\_until@{wait\_until}}
+\index{wait\_until@{wait\_until}!jack::sticky\_event@{jack::sticky\_event}}
+\doxysubsubsection{\texorpdfstring{wait\_until()}{wait\_until()}}
+{\footnotesize\ttfamily template$<$typename clock , typename duration $>$ \\
+bool jack\+::sticky\+\_\+event\+::wait\+\_\+until (\begin{DoxyParamCaption}\item[{std\+::chrono\+::time\+\_\+point$<$ clock, duration $>$}]{timeout }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Block the calling thread until another thread has called \mbox{\hyperlink{classjack_1_1sticky__event_a3c0c75de1ca26c0513fafb2f138027f3}{set()}} or until the timeout is reached. If multiple threads are waiting, it is unspecified which will be woken. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em timeout} & maximum time point at which thread should stop waiting \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if \mbox{\hyperlink{classjack_1_1sticky__event_a3c0c75de1ca26c0513fafb2f138027f3}{set()}} was called; false if timeout was reached 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/jack/projects/asynchronize/include/jack/asynchronize.\+hpp\end{DoxyCompactItemize}

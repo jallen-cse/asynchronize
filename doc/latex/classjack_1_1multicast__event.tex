@@ -1,0 +1,73 @@
+\hypertarget{classjack_1_1multicast__event}{}\doxysection{jack\+::multicast\+\_\+event Class Reference}
+\label{classjack_1_1multicast__event}\index{jack::multicast\_event@{jack::multicast\_event}}
+
+
+Functionally similar to \mbox{\hyperlink{classjack_1_1unicast__event}{jack\+::unicast\+\_\+event}} except for two differences. Firstly, \mbox{\hyperlink{classjack_1_1multicast__event_a7e2dbb0e140253c46add58fd182f92b7}{set()}} calls wake all currently waiting threads. Secondly, between a call to \mbox{\hyperlink{classjack_1_1multicast__event_a7e2dbb0e140253c46add58fd182f92b7}{set()}} and the last waking thread releasing the mutex, new waiters are temporarily blocked from the waiting pool. This is to prevent already-\/woken waiters from returning to the waiting pool and spuriously waking again.  
+
+
+
+
+{\ttfamily \#include $<$asynchronize.\+hpp$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classjack_1_1multicast__event_a08538411df4579b53bdef61caaeff3d5}\label{classjack_1_1multicast__event_a08538411df4579b53bdef61caaeff3d5}} 
+void {\bfseries wait} ()
+\begin{DoxyCompactList}\small\item\em Block the calling thread until another thread calls \mbox{\hyperlink{classjack_1_1multicast__event_a7e2dbb0e140253c46add58fd182f92b7}{set()}}. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename rep , typename period $>$ }\\bool \mbox{\hyperlink{classjack_1_1multicast__event_a2c9dcf76bc1c428b10f707fbe720a09f}{wait\+\_\+for}} (std\+::chrono\+::duration$<$ rep, period $>$ duration)
+\begin{DoxyCompactList}\small\item\em Block the calling thread until another thread calls \mbox{\hyperlink{classjack_1_1multicast__event_a7e2dbb0e140253c46add58fd182f92b7}{set()}} or until the duration expires. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename clock , typename duration $>$ }\\bool \mbox{\hyperlink{classjack_1_1multicast__event_a5d710d42da6c3422a3efde15830e05b2}{wait\+\_\+until}} (std\+::chrono\+::time\+\_\+point$<$ clock, duration $>$ timeout)
+\begin{DoxyCompactList}\small\item\em Block the calling thread until another thread calls \mbox{\hyperlink{classjack_1_1multicast__event_a7e2dbb0e140253c46add58fd182f92b7}{set()}} or until the timeout is reached. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classjack_1_1multicast__event_a7e2dbb0e140253c46add58fd182f92b7}\label{classjack_1_1multicast__event_a7e2dbb0e140253c46add58fd182f92b7}} 
+void {\bfseries set} ()
+\begin{DoxyCompactList}\small\item\em Wake all currently waiting threads. Can block until previous waiting pool is finished waking. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Functionally similar to \mbox{\hyperlink{classjack_1_1unicast__event}{jack\+::unicast\+\_\+event}} except for two differences. Firstly, \mbox{\hyperlink{classjack_1_1multicast__event_a7e2dbb0e140253c46add58fd182f92b7}{set()}} calls wake all currently waiting threads. Secondly, between a call to \mbox{\hyperlink{classjack_1_1multicast__event_a7e2dbb0e140253c46add58fd182f92b7}{set()}} and the last waking thread releasing the mutex, new waiters are temporarily blocked from the waiting pool. This is to prevent already-\/woken waiters from returning to the waiting pool and spuriously waking again. 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classjack_1_1multicast__event_a2c9dcf76bc1c428b10f707fbe720a09f}\label{classjack_1_1multicast__event_a2c9dcf76bc1c428b10f707fbe720a09f}} 
+\index{jack::multicast\_event@{jack::multicast\_event}!wait\_for@{wait\_for}}
+\index{wait\_for@{wait\_for}!jack::multicast\_event@{jack::multicast\_event}}
+\doxysubsubsection{\texorpdfstring{wait\_for()}{wait\_for()}}
+{\footnotesize\ttfamily template$<$typename rep , typename period $>$ \\
+bool jack\+::multicast\+\_\+event\+::wait\+\_\+for (\begin{DoxyParamCaption}\item[{std\+::chrono\+::duration$<$ rep, period $>$}]{duration }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Block the calling thread until another thread calls \mbox{\hyperlink{classjack_1_1multicast__event_a7e2dbb0e140253c46add58fd182f92b7}{set()}} or until the duration expires. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em duration} & maximum duration thread should wait \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if \mbox{\hyperlink{classjack_1_1multicast__event_a7e2dbb0e140253c46add58fd182f92b7}{set()}} was called; false if duration expired 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classjack_1_1multicast__event_a5d710d42da6c3422a3efde15830e05b2}\label{classjack_1_1multicast__event_a5d710d42da6c3422a3efde15830e05b2}} 
+\index{jack::multicast\_event@{jack::multicast\_event}!wait\_until@{wait\_until}}
+\index{wait\_until@{wait\_until}!jack::multicast\_event@{jack::multicast\_event}}
+\doxysubsubsection{\texorpdfstring{wait\_until()}{wait\_until()}}
+{\footnotesize\ttfamily template$<$typename clock , typename duration $>$ \\
+bool jack\+::multicast\+\_\+event\+::wait\+\_\+until (\begin{DoxyParamCaption}\item[{std\+::chrono\+::time\+\_\+point$<$ clock, duration $>$}]{timeout }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Block the calling thread until another thread calls \mbox{\hyperlink{classjack_1_1multicast__event_a7e2dbb0e140253c46add58fd182f92b7}{set()}} or until the timeout is reached. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em timeout} & maximum time point at which thread should stop waiting \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if \mbox{\hyperlink{classjack_1_1multicast__event_a7e2dbb0e140253c46add58fd182f92b7}{set()}} was called; false if timeout was reached 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/jack/projects/asynchronize/include/jack/asynchronize.\+hpp\end{DoxyCompactItemize}

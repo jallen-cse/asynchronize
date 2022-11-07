@@ -1,0 +1,41 @@
+\hypertarget{classjack_1_1channel}{}\doxysection{jack\+::channel\texorpdfstring{$<$}{<} sig\+\_\+tp \texorpdfstring{$>$}{>} Class Template Reference}
+\label{classjack_1_1channel}\index{jack::channel$<$ sig\_tp $>$@{jack::channel$<$ sig\_tp $>$}}
+
+
+Many-\/to-\/one synchronization object. Enable a consumer to wait for different signal types and handle each accordingly.  
+
+
+
+
+{\ttfamily \#include $<$asynchronize.\+hpp$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classjack_1_1channel_a312ebe53da5ddc264e3bda87fb0dff4c}\label{classjack_1_1channel_a312ebe53da5ddc264e3bda87fb0dff4c}} 
+{\bfseries channel} (sig\+\_\+tp initial)
+\item 
+\mbox{\Hypertarget{classjack_1_1channel_a583b358593debb0849d9445aaab4b880}\label{classjack_1_1channel_a583b358593debb0849d9445aaab4b880}} 
+sig\+\_\+tp {\bfseries wait} (const sig\+\_\+tp \&sigs)
+\item 
+\mbox{\Hypertarget{classjack_1_1channel_a94162f6d375e36560c14de6ba0b31ae2}\label{classjack_1_1channel_a94162f6d375e36560c14de6ba0b31ae2}} 
+{\footnotesize template$<$typename rep , typename period $>$ }\\sig\+\_\+tp {\bfseries wait\+\_\+for} (const sig\+\_\+tp sigs, std\+::chrono\+::duration$<$ rep, period $>$ duration)
+\item 
+\mbox{\Hypertarget{classjack_1_1channel_a4df5c1d842542d10a6a5d526e374598b}\label{classjack_1_1channel_a4df5c1d842542d10a6a5d526e374598b}} 
+{\footnotesize template$<$typename clock , typename duration $>$ }\\sig\+\_\+tp {\bfseries wait\+\_\+until} (const sig\+\_\+tp sigs, std\+::chrono\+::time\+\_\+point$<$ clock, duration $>$ timeout)
+\item 
+\mbox{\Hypertarget{classjack_1_1channel_abd8b09bd183225b0ddd66fef56a141fa}\label{classjack_1_1channel_abd8b09bd183225b0ddd66fef56a141fa}} 
+void {\bfseries signal} (const sig\+\_\+tp sig)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\subsubsection*{template$<$typename sig\+\_\+tp$>$\newline
+class jack\+::channel$<$ sig\+\_\+tp $>$}
+Many-\/to-\/one synchronization object. Enable a consumer to wait for different signal types and handle each accordingly. 
+
+A waiter is determined to be wake-\/eligible if a bitwise-\/\+AND between the sent signal and the waited signal returns a non-\/zero value. 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/jack/projects/asynchronize/include/jack/asynchronize.\+hpp\end{DoxyCompactItemize}

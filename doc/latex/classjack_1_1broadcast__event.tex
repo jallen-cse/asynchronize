@@ -1,0 +1,73 @@
+\hypertarget{classjack_1_1broadcast__event}{}\doxysection{jack\+::broadcast\+\_\+event Class Reference}
+\label{classjack_1_1broadcast__event}\index{jack::broadcast\_event@{jack::broadcast\_event}}
+
+
+Functionally similar to \mbox{\hyperlink{classjack_1_1unicast__event}{jack\+::unicast\+\_\+event}} except for ... TODO.  
+
+
+
+
+{\ttfamily \#include $<$asynchronize.\+hpp$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classjack_1_1broadcast__event_a92bafe9ec8345ec97488ce9b87b99eff}\label{classjack_1_1broadcast__event_a92bafe9ec8345ec97488ce9b87b99eff}} 
+void {\bfseries wait} ()
+\begin{DoxyCompactList}\small\item\em Block the calling thread until another thread calls \mbox{\hyperlink{classjack_1_1broadcast__event_ab59282e2d5d0eb5b11580dc817ed8078}{set()}}. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename rep , typename period $>$ }\\bool \mbox{\hyperlink{classjack_1_1broadcast__event_aaa45d8ea7fb88ef1ceff79cb61a5ede6}{wait\+\_\+for}} (std\+::chrono\+::duration$<$ rep, period $>$ duration)
+\begin{DoxyCompactList}\small\item\em Block the calling thread until another thread calls \mbox{\hyperlink{classjack_1_1broadcast__event_ab59282e2d5d0eb5b11580dc817ed8078}{set()}} or until the duration expires. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename clock , typename duration $>$ }\\bool \mbox{\hyperlink{classjack_1_1broadcast__event_ab09d398d61d7de2acbdc8990152179f6}{wait\+\_\+until}} (std\+::chrono\+::time\+\_\+point$<$ clock, duration $>$ timeout)
+\begin{DoxyCompactList}\small\item\em Block the calling thread until another thread calls \mbox{\hyperlink{classjack_1_1broadcast__event_ab59282e2d5d0eb5b11580dc817ed8078}{set()}} or until the timeout is reached. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classjack_1_1broadcast__event_ab59282e2d5d0eb5b11580dc817ed8078}\label{classjack_1_1broadcast__event_ab59282e2d5d0eb5b11580dc817ed8078}} 
+void {\bfseries set} ()
+\begin{DoxyCompactList}\small\item\em Wake N waiting threads, where N is the number of threads currently in the waiting pool. It is possible that new waiters will enter the pool between this call and the Nth thread waking which can lead to a different group waking than that which consituted the pool at the time of this call. If this behavior is undesireable, use \mbox{\hyperlink{classjack_1_1multicast__event}{jack\+::multicast\+\_\+event}}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Functionally similar to \mbox{\hyperlink{classjack_1_1unicast__event}{jack\+::unicast\+\_\+event}} except for ... TODO. 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classjack_1_1broadcast__event_aaa45d8ea7fb88ef1ceff79cb61a5ede6}\label{classjack_1_1broadcast__event_aaa45d8ea7fb88ef1ceff79cb61a5ede6}} 
+\index{jack::broadcast\_event@{jack::broadcast\_event}!wait\_for@{wait\_for}}
+\index{wait\_for@{wait\_for}!jack::broadcast\_event@{jack::broadcast\_event}}
+\doxysubsubsection{\texorpdfstring{wait\_for()}{wait\_for()}}
+{\footnotesize\ttfamily template$<$typename rep , typename period $>$ \\
+bool jack\+::broadcast\+\_\+event\+::wait\+\_\+for (\begin{DoxyParamCaption}\item[{std\+::chrono\+::duration$<$ rep, period $>$}]{duration }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Block the calling thread until another thread calls \mbox{\hyperlink{classjack_1_1broadcast__event_ab59282e2d5d0eb5b11580dc817ed8078}{set()}} or until the duration expires. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em duration} & maximum duration thread should wait \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if \mbox{\hyperlink{classjack_1_1broadcast__event_ab59282e2d5d0eb5b11580dc817ed8078}{set()}} was called; false if duration expired 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classjack_1_1broadcast__event_ab09d398d61d7de2acbdc8990152179f6}\label{classjack_1_1broadcast__event_ab09d398d61d7de2acbdc8990152179f6}} 
+\index{jack::broadcast\_event@{jack::broadcast\_event}!wait\_until@{wait\_until}}
+\index{wait\_until@{wait\_until}!jack::broadcast\_event@{jack::broadcast\_event}}
+\doxysubsubsection{\texorpdfstring{wait\_until()}{wait\_until()}}
+{\footnotesize\ttfamily template$<$typename clock , typename duration $>$ \\
+bool jack\+::broadcast\+\_\+event\+::wait\+\_\+until (\begin{DoxyParamCaption}\item[{std\+::chrono\+::time\+\_\+point$<$ clock, duration $>$}]{timeout }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Block the calling thread until another thread calls \mbox{\hyperlink{classjack_1_1broadcast__event_ab59282e2d5d0eb5b11580dc817ed8078}{set()}} or until the timeout is reached. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em timeout} & maximum time point at which thread should stop waiting \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if \mbox{\hyperlink{classjack_1_1broadcast__event_ab59282e2d5d0eb5b11580dc817ed8078}{set()}} was called; false if timeout was reached 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/jack/projects/asynchronize/include/jack/asynchronize.\+hpp\end{DoxyCompactItemize}

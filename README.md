@@ -3,6 +3,7 @@
 Friendly synchronization tools for modern C++.
 
 [![License: MIT](https://img.shields.io/github/license/jallen-cse/error?color=blue&style=shield)](./LICENSE)
+[![CircleCI](https://circleci.com/gh/jallen-cse/asynchronize.svg?style=shield)](https://circleci.com/gh/jallen-cse/asynchronize)
 
 **Asynchronize** is an attempt to provide basic thread synchronization classes that have a feel similar to Python's `threading.Event`. I always 
 found myself creating trios of `bool`, `std::mutex`, and `std::condition_variable` to achieve this same pattern with far more lines of code.

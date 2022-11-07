@@ -16,6 +16,9 @@ header into your source tree and get back to work!
 
 *The library depends on your system's thread implementation (like `pthreads` on Linux) so you may need to add link options to your build.*
 
+## Docs (Incomplete)
+Documentation is contained inline in the source file but is also available through Doxygen. Open /doc/html/annotated.html in a browser to view the generated docs.
+
 ## Todo
-Asynchronize is a work in progress with a totally unsolidified API. I need to do a functionality / sanity check over the entire project. Things 
+**Asynchronize** is a work in progress with a totally unsolidified API. I need to do a functionality / sanity check over the entire project. Things 
 will be broken! Likewise, it is all untested, so there may be some unexpected behaviors lurking.

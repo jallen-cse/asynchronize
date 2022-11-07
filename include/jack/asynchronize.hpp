@@ -476,7 +476,7 @@ class multicast_event
     {
         m_pool_mtx.lock();
         m_wait_mtx.lock();
-        if (m_is_set = m_wait_count > 0)
+        if ((m_is_set = m_wait_count) > 0)
         {
             m_wait_mtx.unlock();
             m_cv.notify_all();
